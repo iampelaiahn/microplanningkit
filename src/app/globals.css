@@ -5,48 +5,26 @@
 
 @layer base {
   :root {
-    --background: 208 100% 91%; /* #D2EAFF */
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 204 100% 63%; /* #43B5FF */
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 271 76% 53%; /* #8A2BE2 */
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 204 100% 63%;
-    --radius: 0.75rem;
-  }
-
-  .dark {
-    --background: 222.2 84% 4.9%;
+    --background: 222 47% 4%; /* Very dark navy */
     --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
+    --card: 222 47% 7%;
     --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
+    --popover: 222 47% 7%;
     --popover-foreground: 210 40% 98%;
-    --primary: 204 100% 63%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
+    --primary: 180 100% 50%; /* Cyan accent */
+    --primary-foreground: 222 47% 4%;
+    --secondary: 217 32% 17%;
     --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 271 76% 53%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
+    --muted: 217 32% 17%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 180 100% 50%;
+    --accent-foreground: 222 47% 4%;
+    --destructive: 0 62% 30%;
     --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 48%;
+    --border: 217 32% 17%;
+    --input: 217 32% 17%;
+    --ring: 180 100% 50%;
+    --radius: 0.5rem;
   }
 }
 
@@ -60,20 +38,10 @@
 }
 
 .glow-cyan {
-  box-shadow: 0 0 15px 2px rgba(67, 181, 255, 0.5);
+  text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
 }
 
-.glow-orange-flicker {
-  animation: flicker 1.5s infinite;
-}
-
-@keyframes flicker {
-  0%, 19.999%, 22%, 62.999%, 64%, 64.999%, 70%, 100% {
-    opacity: 0.99;
-    box-shadow: 0 0 10px 2px rgba(255, 165, 0, 0.6);
-  }
-  20%, 21.999%, 63%, 63.999%, 65%, 69.999% {
-    opacity: 0.4;
-    box-shadow: none;
-  }
+.card-hover-glow:hover {
+  box-shadow: 0 0 20px 2px rgba(0, 255, 255, 0.2);
+  border-color: rgba(0, 255, 255, 0.4);
 }
