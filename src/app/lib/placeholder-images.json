@@ -1,0 +1,17 @@
+
+{
+  "placeholderImages": [
+    {
+      "id": "hero-health",
+      "description": "Community health workers in action",
+      "imageUrl": "https://picsum.photos/seed/health1/1200/600",
+      "imageHint": "community health"
+    },
+    {
+      "id": "mbare-map",
+      "description": "Mbare community map view",
+      "imageUrl": "https://picsum.photos/seed/map1/800/600",
+      "imageHint": "city map"
+    }
+  ]
+}
