@@ -2,12 +2,21 @@
 import { StockItem, KPRecord, Hotspot } from './types';
 
 export const INITIAL_STOCK: StockItem[] = [
-  { id: '1', name: 'Condoms', totalReceived: 12000, totalDispensed: 4000, currentStock: 8000, ward: 'Ward 3', facility: 'Matapi Youth Hub' },
-  { id: '2', name: 'Lube', totalReceived: 5000, totalDispensed: 2800, currentStock: 2200, ward: 'Ward 3', facility: 'Matapi Youth Hub' },
-  { id: '3', name: 'HIVST Kits', totalReceived: 3000, totalDispensed: 1800, currentStock: 1200, ward: 'Ward 11', facility: 'Edith Opperman Clinic' },
-  { id: '4', name: 'Pregnancy Tests', totalReceived: 1200, totalDispensed: 750, currentStock: 450, ward: 'Ward 12', facility: 'Edith Opperman Clinic' },
-  { id: '5', name: 'Pads (Reusable)', totalReceived: 2500, totalDispensed: 1500, currentStock: 1000, ward: 'Ward 4', facility: 'Matapi Youth Hub' },
-  { id: '6', name: 'Pads (Disposable)', totalReceived: 6000, totalDispensed: 3500, currentStock: 2500, ward: 'Ward 4', facility: 'Matapi Youth Hub' },
+  // Matapi Youth Hub
+  { id: '1', name: 'Condoms', totalReceived: 12000, totalDispensed: 4000, currentStock: 8000, facility: 'Matapi Youth Hub' },
+  { id: '2', name: 'Lube', totalReceived: 5000, totalDispensed: 2800, currentStock: 2200, facility: 'Matapi Youth Hub' },
+  { id: '3', name: 'HIVST Kits', totalReceived: 3000, totalDispensed: 1800, currentStock: 1200, facility: 'Matapi Youth Hub' },
+  { id: '4', name: 'Pregnancy Tests', totalReceived: 1200, totalDispensed: 750, currentStock: 450, facility: 'Matapi Youth Hub' },
+  { id: '5', name: 'Pads (Reusable)', totalReceived: 2500, totalDispensed: 1500, currentStock: 1000, facility: 'Matapi Youth Hub' },
+  { id: '6', name: 'Pads (Disposable)', totalReceived: 6000, totalDispensed: 3500, currentStock: 2500, facility: 'Matapi Youth Hub' },
+  
+  // Edith Opperman Clinic
+  { id: '7', name: 'Condoms', totalReceived: 10000, totalDispensed: 3000, currentStock: 7000, facility: 'Edith Opperman Clinic' },
+  { id: '8', name: 'Lube', totalReceived: 4500, totalDispensed: 2000, currentStock: 2500, facility: 'Edith Opperman Clinic' },
+  { id: '9', name: 'HIVST Kits', totalReceived: 4000, totalDispensed: 1500, currentStock: 2500, facility: 'Edith Opperman Clinic' },
+  { id: '10', name: 'Pregnancy Tests', totalReceived: 1500, totalDispensed: 800, currentStock: 700, facility: 'Edith Opperman Clinic' },
+  { id: '11', name: 'Pads (Reusable)', totalReceived: 2000, totalDispensed: 1200, currentStock: 800, facility: 'Edith Opperman Clinic' },
+  { id: '12', name: 'Pads (Disposable)', totalReceived: 5000, totalDispensed: 3000, currentStock: 2000, facility: 'Edith Opperman Clinic' },
 ];
 
 export const INITIAL_KPS: KPRecord[] = [

@@ -8,7 +8,6 @@ export type StockItem = {
   totalReceived: number;
   totalDispensed: number;
   currentStock: number;
-  ward: 'Ward 3' | 'Ward 4' | 'Ward 11' | 'Ward 12';
 };
 
 export type KPRecord = {
