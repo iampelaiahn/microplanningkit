@@ -3,19 +3,25 @@
 
 import React, { useState } from 'react'
 import Link from 'next/link'
-import { Shield, UserCog, Users, Lock, Unlock, ArrowRight, AlertCircle } from 'lucide-react'
+import { Shield, UserCog, Users, Lock, Unlock, ArrowRight, AlertCircle, LogIn, LogOut, CheckCircle2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { toast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
+import { useAuth, useUser } from '@/firebase'
+import { GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
 export default function Home() {
   const [pin, setPin] = useState("");
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [error, setError] = useState(false);
   const REQUIRED_PIN = "3524!6";
+
+  const auth = useAuth();
+  const { user, loading } = useUser();
 
   const handleVerify = (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,6 +40,31 @@ export default function Home() {
         description: "Incorrect PIN. Security log recorded.",
       });
     }
+  };
+
+  const handleLogin = async () => {
+    try {
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
+      toast({
+        title: "Authenticated",
+        description: "Successfully signed in with Google.",
+      });
+    } catch (e: any) {
+      toast({
+        variant: "destructive",
+        title: "Login Failed",
+        description: e.message || "Could not authenticate.",
+      });
+    }
+  };
+
+  const handleLogout = async () => {
+    await signOut(auth);
+    toast({
+      title: "Logged Out",
+      description: "You have been securely signed out.",
+    });
   };
 
   if (!isAuthorized) {
@@ -101,7 +132,29 @@ export default function Home() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-background p-6 animate-in fade-in duration-1000">
+    <main className="flex min-h-screen flex-col items-center justify-center bg-background p-6 animate-in fade-in duration-1000 relative">
+      <div className="absolute top-8 right-8 flex items-center gap-4">
+        {user ? (
+          <div className="flex items-center gap-3 bg-card/40 backdrop-blur p-2 rounded-full border border-primary/20">
+            <Avatar className="h-8 w-8">
+              <AvatarImage src={user.photoURL || ''} />
+              <AvatarFallback>{user.displayName?.charAt(0)}</AvatarFallback>
+            </Avatar>
+            <div className="hidden md:block text-left">
+              <p className="text-[10px] font-black uppercase text-primary leading-none">{user.displayName}</p>
+              <p className="text-[8px] text-muted-foreground uppercase">Authenticated</p>
+            </div>
+            <Button variant="ghost" size="icon" onClick={handleLogout} className="h-8 w-8 text-muted-foreground hover:text-destructive">
+              <LogOut className="h-4 w-4" />
+            </Button>
+          </div>
+        ) : (
+          <Button onClick={handleLogin} className="bg-primary/10 text-primary border border-primary/20 gap-2 h-10 px-4 font-black uppercase text-xs tracking-widest hover:bg-primary/20">
+            <LogIn className="h-4 w-4" /> Sign In with Google
+          </Button>
+        )}
+      </div>
+
       <div className="max-w-4xl w-full space-y-12">
         <div className="text-center space-y-4">
           <div className="inline-block p-4 rounded-full bg-primary/10 mb-4 border border-primary/20">
@@ -128,10 +181,15 @@ export default function Home() {
                 </CardDescription>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
               <Button asChild className="w-full h-14 text-lg bg-primary text-background font-black uppercase tracking-widest gap-2 group-hover:scale-[1.02] transition-transform">
                 <Link href="/dashboard">Access Dashboard <ArrowRight className="h-5 w-5" /></Link>
               </Button>
+              {user && (
+                <div className="flex items-center gap-2 justify-center text-[10px] font-bold text-primary/60 uppercase">
+                  <CheckCircle2 className="h-3 w-3" /> Account Synced
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -147,10 +205,15 @@ export default function Home() {
                 </CardDescription>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
               <Button asChild variant="secondary" className="w-full h-14 text-lg bg-accent text-background hover:bg-accent/90 font-black uppercase tracking-widest gap-2 group-hover:scale-[1.02] transition-transform">
                 <Link href="/field">Go to Field Kit <ArrowRight className="h-5 w-5" /></Link>
               </Button>
+              {user && (
+                <div className="flex items-center gap-2 justify-center text-[10px] font-bold text-accent/60 uppercase">
+                  <CheckCircle2 className="h-3 w-3" /> Field Session Active
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
