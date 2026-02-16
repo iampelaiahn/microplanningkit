@@ -1,5 +1,5 @@
 
-import { StockItem, KPRecord, Hotspot } from './types';
+import { StockItem, KPRecord, Hotspot, DistributionRecord } from './types';
 
 export const INITIAL_STOCK: StockItem[] = [
   // Matapi Youth Hub
@@ -19,9 +19,17 @@ export const INITIAL_STOCK: StockItem[] = [
   { id: '12', name: 'Pads (Disposable)', totalReceived: 5000, totalDispensed: 3000, currentStock: 2000, facility: 'Edith Opperman Clinic' },
 ];
 
+export const INITIAL_DISTRIBUTIONS: DistributionRecord[] = [
+  { id: 'd1', peerUin: 'V-A-80063', ward: 'Ward 3', facility: 'Matapi Youth Hub', itemName: 'Condoms', quantity: 50, timestamp: '2023-11-20 10:30' },
+  { id: 'd2', peerUin: 'V-A-80063', ward: 'Ward 3', facility: 'Matapi Youth Hub', itemName: 'Lube', quantity: 20, timestamp: '2023-11-20 10:30' },
+  { id: 'd3', peerUin: 'M-B-91022', ward: 'Ward 4', facility: 'Matapi Youth Hub', itemName: 'HIVST Kits', quantity: 2, timestamp: '2023-11-21 14:15' },
+  { id: 'd4', peerUin: 'V-C-77210', ward: 'Ward 11', facility: 'Edith Opperman Clinic', itemName: 'Condoms', quantity: 100, timestamp: '2023-11-22 09:00' },
+  { id: 'd5', peerUin: 'M-D-44129', ward: 'Ward 12', facility: 'Edith Opperman Clinic', itemName: 'Pregnancy Tests', quantity: 5, timestamp: '2023-11-22 11:45' },
+];
+
 export const INITIAL_KPS: KPRecord[] = [
   { id: 'kp1', uin: 'V-A-80063', riskLevel: 'High', ward: 'Ward 3', lastAssessment: '2023-10-15', verificationStatus: 'Verified', meetingCount: 3 },
-  { id: 'kp2', uin: 'M-B-91022', riskLevel: 'Low', ward: 'Ward 11', lastAssessment: '2023-11-01', verificationStatus: 'Pending', meetingCount: 1 },
+  { id: 'kp2', uin: 'M-B-91022', riskLevel: 'Low', ward: 'Ward 4', lastAssessment: '2023-11-01', verificationStatus: 'Pending', meetingCount: 1 },
 ];
 
 export const INITIAL_HOTSPOTS: Hotspot[] = [

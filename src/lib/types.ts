@@ -10,6 +10,16 @@ export type StockItem = {
   currentStock: number;
 };
 
+export type DistributionRecord = {
+  id: string;
+  peerUin: string;
+  ward: string;
+  facility: string;
+  itemName: string;
+  quantity: number;
+  timestamp: string;
+};
+
 export type KPRecord = {
   id: string;
   uin: string;
