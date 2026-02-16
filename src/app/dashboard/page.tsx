@@ -13,15 +13,16 @@ export default function Dashboard() {
   const [stock, setStock] = useState(INITIAL_STOCK);
   const [isUploading, setIsUploading] = useState(false);
 
-  const totalStockInHand = stock.reduce((acc, item) => acc + item.quantity, 0);
-  const maxStockCapacity = 10000;
+  const totalStockInHand = stock.reduce((acc, item) => acc + item.currentStock, 0);
+  const totalStockReceived = stock.reduce((acc, item) => acc + item.totalReceived, 0);
+  const maxStockCapacity = 20000;
 
   const handleExcelUpload = () => {
     setIsUploading(true);
     setTimeout(() => {
       setIsUploading(false);
-      // Mock logic: add some stock from "Peers Aggregate Form"
-      setStock(prev => prev.map(s => s.name === 'Condoms' ? { ...s, quantity: s.quantity + 500 } : s));
+      // Mock logic: sync from peer request forms
+      setStock(prev => prev.map(s => s.name === 'Condoms' ? { ...s, totalDispensed: s.totalDispensed + 500, currentStock: s.currentStock - 500 } : s));
     }, 2000);
   };
 
@@ -30,7 +31,7 @@ export default function Dashboard() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-3xl font-extrabold text-primary">Supervisor Intelligence</h1>
-          <p className="text-muted-foreground">Mbare Community Microplanning Foundation</p>
+          <p className="text-muted-foreground">Mbare Community Microplanning - Wards 3, 4, 11, 12</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" className="gap-2" onClick={handleExcelUpload} disabled={isUploading}>
@@ -48,10 +49,10 @@ export default function Dashboard() {
         <Card className="md:col-span-1 bg-white/50 backdrop-blur">
           <CardHeader>
             <CardTitle className="text-lg">Resource Inventory</CardTitle>
-            <CardDescription>Total distributed vs available</CardDescription>
+            <CardDescription>Total In-Hand vs Received Capacity</CardDescription>
           </CardHeader>
           <CardContent className="flex justify-center">
-            <StockCircularProgress value={totalStockInHand} max={maxStockCapacity} label="In Hand" />
+            <StockCircularProgress value={totalStockInHand} max={totalStockReceived} label="Stock in Hand" />
           </CardContent>
         </Card>
 
@@ -60,12 +61,12 @@ export default function Dashboard() {
             <Card key={item.id} className="border-l-4 border-l-primary">
               <CardContent className="pt-6 flex justify-between items-center">
                 <div>
-                  <p className="text-xs font-bold uppercase text-muted-foreground">{item.ward}</p>
-                  <h3 className="text-lg font-bold">{item.name}</h3>
+                  <p className="text-[10px] font-bold uppercase text-muted-foreground">{item.facility}</p>
+                  <h3 className="text-lg font-bold">{item.name} ({item.ward})</h3>
                 </div>
                 <div className="text-right">
-                  <p className="text-2xl font-black text-primary">{item.quantity}</p>
-                  <p className="text-xs text-muted-foreground">Units</p>
+                  <p className="text-2xl font-black text-primary">{item.currentStock}</p>
+                  <p className="text-xs text-muted-foreground">In Hand</p>
                 </div>
               </CardContent>
             </Card>
@@ -86,17 +87,21 @@ export default function Dashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <MapPin className="h-5 w-5 text-primary" />
-              Hotspot Node Activity
+              Facility Nodes
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-64 bg-muted/50 rounded-lg flex items-center justify-center relative overflow-hidden">
                <div className="absolute inset-0 bg-[url('https://picsum.photos/seed/mbaremap/800/400')] bg-cover opacity-30 grayscale" />
-               <div className="relative z-10 flex flex-col items-center">
-                  <div className="w-12 h-12 bg-primary rounded-lg animate-pulse glow-cyan flex items-center justify-center mb-2">
-                    <Box className="text-white h-6 w-6" />
+               <div className="relative z-10 flex flex-col items-center gap-2">
+                  <div className="bg-white/90 p-3 rounded-lg shadow-sm border border-primary/20 flex items-center gap-2">
+                    <div className="w-4 h-4 bg-primary rounded" />
+                    <span className="text-xs font-bold">Matapi Youth Hub (Ward 3/4)</span>
                   </div>
-                  <span className="text-sm font-bold">Facility: Stodart Clinic</span>
+                  <div className="bg-white/90 p-3 rounded-lg shadow-sm border border-accent/20 flex items-center gap-2">
+                    <div className="w-4 h-4 bg-accent rounded" />
+                    <span className="text-xs font-bold">Edith Opperman Clinic (Ward 11/12)</span>
+                  </div>
                </div>
             </div>
           </CardContent>
@@ -114,7 +119,7 @@ export default function Dashboard() {
               <FileSpreadsheet className="h-10 w-10 text-muted-foreground" />
               <div>
                 <p className="font-bold">Upload Hotspot Locator Excel</p>
-                <p className="text-xs text-muted-foreground">Maps GPS coordinates to initial nodes</p>
+                <p className="text-xs text-muted-foreground">Maps GPS coordinates to facility nodes</p>
               </div>
               <Button variant="secondary" size="sm">Select File</Button>
             </div>

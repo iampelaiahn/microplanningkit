@@ -4,7 +4,10 @@ export type RiskLevel = 'Low' | 'Medium' | 'High';
 export type StockItem = {
   id: string;
   name: string;
-  quantity: number;
+  facility: 'Matapi Youth Hub' | 'Edith Opperman Clinic' | 'Warehouse';
+  totalReceived: number;
+  totalDispensed: number;
+  currentStock: number;
   ward: 'Ward 3' | 'Ward 4' | 'Ward 11' | 'Ward 12';
 };
 
