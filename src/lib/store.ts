@@ -33,7 +33,56 @@ export const INITIAL_KPS: KPRecord[] = [
 ];
 
 export const INITIAL_HOTSPOTS: Hotspot[] = [
-  { id: 'h1', name: 'Mbare Musika', type: 'Community', lat: -17.854, lng: 31.037, ward: 'Ward 3', reachCount: 45 },
-  { id: 'h2', name: 'Matapi Youth Hub', type: 'Facility', lat: -17.859, lng: 31.042, ward: 'Ward 3', reachCount: 120 },
-  { id: 'h3', name: 'Edith Opperman Clinic', type: 'Facility', lat: -17.865, lng: 31.050, ward: 'Ward 11', reachCount: 85 },
+  { 
+    id: 'h1', 
+    name: 'Mbare Musika', 
+    type: 'Community', 
+    lat: -17.854, 
+    lng: 31.037, 
+    ward: 'Ward 3', 
+    reachCount: 45, 
+    relationshipStrength: 'Moderate',
+    influenceScore: 65,
+    targetGoal: 'Establish peer leader connection',
+    contactPerson: 'Sarah'
+  },
+  { 
+    id: 'h2', 
+    name: 'Matapi Youth Hub', 
+    type: 'Facility', 
+    lat: -17.859, 
+    lng: 31.042, 
+    ward: 'Ward 3', 
+    reachCount: 120,
+    relationshipStrength: 'Strong',
+    influenceScore: 90,
+    targetGoal: 'Maintain high referral rates',
+    contactPerson: 'Dr. Moyo'
+  },
+  { 
+    id: 'h3', 
+    name: 'Edith Opperman', 
+    type: 'Facility', 
+    lat: -17.865, 
+    lng: 31.050, 
+    ward: 'Ward 11', 
+    reachCount: 85,
+    relationshipStrength: 'Moderate',
+    influenceScore: 72,
+    targetGoal: 'Improve after-hours access',
+    contactPerson: 'Nurse Sibanda'
+  },
+  { 
+    id: 'h4', 
+    name: 'Clara (Peer Leader)', 
+    type: 'Peer', 
+    lat: -17.855, 
+    lng: 31.035, 
+    ward: 'Ward 4', 
+    reachCount: 22,
+    relationshipStrength: 'Weak',
+    influenceScore: 30,
+    targetGoal: 'Strengthen influence and trust',
+    contactPerson: 'Clara'
+  }
 ];

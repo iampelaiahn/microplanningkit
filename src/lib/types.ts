@@ -30,12 +30,18 @@ export type KPRecord = {
   meetingCount: number;
 };
 
+export type RelationshipStrength = 'Weak' | 'Moderate' | 'Strong' | 'Critical';
+
 export type Hotspot = {
   id: string;
   name: string;
-  type: 'Facility' | 'Community';
+  type: 'Facility' | 'Community' | 'Peer';
   lat: number;
   lng: number;
   ward: string;
   reachCount: number;
+  relationshipStrength?: RelationshipStrength;
+  influenceScore?: number;
+  targetGoal?: string;
+  contactPerson?: string;
 };
