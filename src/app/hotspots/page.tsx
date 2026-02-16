@@ -1,192 +1,262 @@
-
 "use client"
 
-import React, { useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Users, Info, Plus, Share2, Target, Zap, Link2, GitBranchPlus } from 'lucide-react'
-import { INITIAL_HOTSPOTS } from '@/lib/store'
+import React from 'react'
+import { Card, CardContent } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { 
+  Search, 
+  Mail, 
+  Bell, 
+  UserPlus, 
+  TrendingUp, 
+  Globe, 
+  MessageSquare,
+  Activity
+} from 'lucide-react'
+import { 
+  LineChart, 
+  Line, 
+  ResponsiveContainer, 
+  XAxis, 
+  YAxis, 
+  Tooltip as ChartTooltip 
+} from 'recharts'
 import { cn } from '@/lib/utils'
 
-export default function HotspotsPage() {
-  const [hotspots] = useState(INITIAL_HOTSPOTS);
+const analyticsData = [
+  { name: 'Mon', value: 10 },
+  { name: 'Tue', value: 15 },
+  { name: 'Wed', value: 12 },
+  { name: 'Thu', value: 25 },
+  { name: 'Fri', value: 22 },
+  { name: 'Sat', value: 35 },
+  { name: 'Sun', value: 30 },
+];
 
-  const getStrengthColor = (strength?: string) => {
-    switch (strength) {
-      case 'Strong': return 'bg-primary/20 text-primary border-primary/40';
-      case 'Moderate': return 'bg-accent/20 text-accent border-accent/40';
-      case 'Weak': return 'bg-orange-500/20 text-orange-500 border-orange-500/40';
-      case 'Critical': return 'bg-destructive/20 text-destructive border-destructive/40';
-      default: return 'bg-muted text-muted-foreground';
-    }
-  };
+const trendingTopics = [
+  { tag: '#MbareMicroplanning', count: '1.2k' },
+  { tag: '#SentinelSurveillance', count: '850' },
+  { tag: '#PeerReach', count: '640' },
+];
 
+export default function SocialNetworkMapPage() {
   return (
-    <div className="space-y-6 max-w-7xl mx-auto p-4 md:p-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-extrabold text-primary glow-cyan">Social Network Relationship Map</h1>
-          <p className="text-muted-foreground">Mapping trust, influence, and peer-to-peer connectivity</p>
+    <div className="min-h-screen bg-background bg-grid p-6 space-y-6 overflow-hidden">
+      {/* Top Navigation Bar */}
+      <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
+        <div className="flex items-center gap-8 w-full lg:w-auto">
+          <h1 className="text-2xl font-black tracking-tighter text-primary glow-cyan uppercase italic">
+            Social Network Map
+          </h1>
+          <div className="relative flex-1 lg:w-96">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary/60" />
+            <Input 
+              placeholder="Search intelligence nodes..." 
+              className="pl-10 cyber-border border-primary/20 bg-background/40 h-10 italic"
+            />
+          </div>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" className="gap-2 border-primary/20 text-primary hover:bg-primary/10">
-            <GitBranchPlus className="h-4 w-4" />
-            New Connection
-          </Button>
-          <Button className="gap-2 shadow-lg shadow-primary/20">
-            <Plus className="h-4 w-4" />
-            Add Influence Node
-          </Button>
+
+        <div className="flex items-center gap-6 text-xs font-bold uppercase tracking-widest">
+          <div className="flex items-center gap-2 group cursor-pointer hover:text-primary transition-colors">
+            <Mail className="h-4 w-4 text-accent" />
+            <span>Messages: <span className="text-primary glow-cyan">99+</span></span>
+          </div>
+          <div className="flex items-center gap-2 group cursor-pointer hover:text-primary transition-colors">
+            <Bell className="h-4 w-4 text-accent" />
+            <span>Notifications: <span className="text-primary glow-cyan">21</span></span>
+          </div>
+          <div className="flex items-center gap-2 group cursor-pointer hover:text-primary transition-colors">
+            <UserPlus className="h-4 w-4 text-accent" />
+            <span>Peer Requests: <span className="text-primary glow-cyan">5</span></span>
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2 overflow-hidden h-[600px] relative border-primary/20 bg-background/50 backdrop-blur-xl group">
-           {/* Abstract Network Background */}
-           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,255,255,0.05)_0%,transparent_70%)]" />
-           <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(var(--primary) 0.5px, transparent 0.5px)', backgroundSize: '24px 24px' }} />
-           
-           {/* SNA Relationship Overlay (SVG) */}
-           <svg className="absolute inset-0 w-full h-full pointer-events-none">
-              <defs>
-                <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto">
-                  <polygon points="0 0, 10 3.5, 0 7" fill="hsl(var(--primary))" opacity="0.3" />
-                </marker>
-              </defs>
-              {/* Lines representing social influence flow */}
-              <line x1="25%" y1="25%" x2="50%" y2="50%" stroke="hsl(var(--primary))" strokeWidth="2" strokeDasharray="12,6" className="opacity-20 animate-[pulse_3s_infinite]" />
-              <line x1="75%" y1="25%" x2="50%" y2="50%" stroke="hsl(var(--accent))" strokeWidth="2" strokeDasharray="8,4" className="opacity-20" />
-              <line x1="40%" y1="75%" x2="50%" y2="50%" stroke="hsl(var(--primary))" strokeWidth="1" className="opacity-10" />
-              <line x1="25%" y1="25%" x2="40%" y2="75%" stroke="hsl(var(--orange-500))" strokeWidth="1" strokeDasharray="4,4" className="opacity-20" />
-           </svg>
+      {/* Main Stats Row */}
+      <div className="flex gap-12 text-[10px] font-black uppercase tracking-tighter text-muted-foreground/60">
+        <div className="flex items-center gap-2">
+          <div className="w-1 h-4 bg-primary glow-cyan" />
+          Online Nodes: <span className="text-foreground">8,230,000</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-1 h-4 bg-primary glow-cyan" />
+          New Trust Connections: <span className="text-primary">+12,450</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-1 h-4 bg-primary glow-cyan" />
+          Trending Nano-Networks
+        </div>
+      </div>
 
-           {/* Relationship Nodes */}
-           <div className="absolute top-[25%] left-[25%] group/node">
-              <div className="w-16 h-16 bg-primary/10 rounded-2xl shadow-2xl flex items-center justify-center border-2 border-primary/40 hover:scale-110 transition-all cursor-pointer relative z-10">
-                <Info className="text-primary h-8 w-8" />
-                <div className="absolute -top-1 -right-1 w-4 h-4 bg-primary rounded-full animate-ping" />
-              </div>
-              <div className="absolute top-20 left-1/2 -translate-x-1/2 bg-card/95 backdrop-blur border border-primary/20 p-3 rounded-xl shadow-2xl w-56 opacity-0 group-hover/node:opacity-100 transition-opacity z-50 pointer-events-none">
-                <p className="font-bold text-primary">Stodart Clinic Hub</p>
-                <p className="text-[10px] uppercase font-black text-muted-foreground mt-1">Core Referral Node</p>
-                <div className="mt-2 text-[11px] italic text-foreground/80">"High institutional trust but requires peer bridge."</div>
-              </div>
-              <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] font-black uppercase text-primary tracking-tighter whitespace-nowrap">Stodart Hub</span>
-           </div>
+      {/* Central Graph Area */}
+      <div className="relative flex-1 h-[500px] cyber-border border-primary/10 overflow-hidden bg-[radial-gradient(circle_at_center,rgba(0,255,255,0.05)_0%,transparent_70%)]">
+        {/* Glow Lines SVG */}
+        <svg className="absolute inset-0 w-full h-full network-line opacity-40">
+          <line x1="50%" y1="50%" x2="30%" y2="30%" stroke="hsl(var(--primary))" strokeWidth="2" strokeDasharray="10 5" />
+          <line x1="50%" y1="50%" x2="70%" y2="30%" stroke="hsl(var(--primary))" strokeWidth="2" />
+          <line x1="50%" y1="50%" x2="20%" y2="60%" stroke="hsl(var(--accent))" strokeWidth="1" strokeDasharray="5 5" />
+          <line x1="50%" y1="50%" x2="80%" y2="65%" stroke="hsl(var(--primary))" strokeWidth="1" />
+          <line x1="30%" y1="30%" x2="15%" y2="20%" stroke="hsl(var(--primary))" strokeWidth="1" className="animate-flicker" />
+          <line x1="70%" y1="30%" x2="85%" y2="25%" stroke="hsl(var(--primary))" strokeWidth="1" />
+          {/* Connection Particles */}
+          <circle cx="40%" cy="40%" r="2" fill="hsl(var(--primary))" className="animate-ping" />
+          <circle cx="60%" cy="40%" r="2" fill="hsl(var(--accent))" className="animate-ping" style={{ animationDelay: '1s' }} />
+        </svg>
 
-           <div className="absolute top-[50%] left-[50%] group/node">
-              <div className="w-20 h-20 bg-accent/10 rounded-full shadow-2xl flex items-center justify-center border-2 border-accent/40 hover:scale-110 transition-all cursor-pointer relative z-10">
-                <Users className="text-accent h-10 w-10" />
-              </div>
-              <div className="absolute top-24 left-1/2 -translate-x-1/2 bg-card/95 backdrop-blur border border-accent/20 p-3 rounded-xl shadow-2xl w-56 opacity-0 group-hover/node:opacity-100 transition-opacity z-50 pointer-events-none">
-                <p className="font-bold text-accent">Mbare Musika Network</p>
-                <p className="text-[10px] uppercase font-black text-muted-foreground mt-1">Strategic Community Node</p>
-                <div className="mt-2 text-[11px] text-foreground/80">Connecting 45+ peers. Current trust: Moderate.</div>
-              </div>
-              <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] font-black uppercase text-accent tracking-tighter whitespace-nowrap">Musika Cluster</span>
-           </div>
+        {/* Central Core Node */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
+          <div className="relative">
+            <div className="absolute inset-0 bg-primary/20 rounded-full blur-2xl animate-pulse" />
+            <div className="w-32 h-32 rounded-full border-4 border-primary p-1 bg-background shadow-[0_0_30px_rgba(0,255,255,0.3)]">
+              <Avatar className="w-full h-full border-2 border-primary/20">
+                <AvatarImage src="https://picsum.photos/seed/central/300/300" />
+                <AvatarFallback>CN</AvatarFallback>
+              </Avatar>
+            </div>
+            <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 whitespace-nowrap bg-primary text-background px-3 py-1 rounded-sm text-[10px] font-black uppercase tracking-widest skew-x-[-12deg]">
+              Core Influencer
+            </div>
+          </div>
+        </div>
 
-           <div className="absolute top-[25%] left-[75%] group/node">
-              <div className="w-14 h-14 bg-orange-500/10 rounded-full shadow-2xl flex items-center justify-center border-2 border-orange-500/40 hover:scale-110 transition-all cursor-pointer relative z-10 animate-pulse">
-                <Zap className="text-orange-500 h-6 w-6" />
-              </div>
-              <div className="absolute top-18 left-1/2 -translate-x-1/2 bg-card/95 backdrop-blur border border-orange-500/20 p-3 rounded-xl shadow-2xl w-56 opacity-0 group-hover/node:opacity-100 transition-opacity z-50 pointer-events-none">
-                <p className="font-bold text-orange-500">Clara (Peer Leader)</p>
-                <p className="text-[10px] uppercase font-black text-muted-foreground mt-1">High Influence Peer Node</p>
-                <div className="mt-2 text-[11px] font-bold text-primary">STRATEGIC GOAL: Strengthen Trust</div>
-              </div>
-              <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] font-black uppercase text-orange-500 tracking-tighter whitespace-nowrap">Peer Leader: Clara</span>
-           </div>
+        {/* Satellite Nodes */}
+        <div className="absolute top-[30%] left-[30%] -translate-x-1/2 -translate-y-1/2 group cursor-pointer">
+          <div className="w-16 h-16 rounded-full border-2 border-primary/40 p-1 bg-background hover:scale-110 transition-transform">
+            <Avatar className="w-full h-full">
+              <AvatarImage src="https://picsum.photos/seed/node1/150/150" />
+            </Avatar>
+          </div>
+          <Badge className="absolute -top-2 -right-2 bg-primary/20 border-primary/40 text-[8px] h-4">Leader</Badge>
+        </div>
 
-           <div className="absolute top-[75%] left-[40%] group/node">
-              <div className="w-12 h-12 bg-muted rounded-xl shadow-2xl flex items-center justify-center border border-border hover:scale-110 transition-all cursor-pointer relative z-10">
-                <Link2 className="text-muted-foreground h-5 w-5" />
-              </div>
-              <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] font-black uppercase text-muted-foreground tracking-tighter whitespace-nowrap">Secondary Link</span>
-           </div>
+        <div className="absolute top-[30%] left-[70%] -translate-x-1/2 -translate-y-1/2 group cursor-pointer">
+          <div className="w-16 h-16 rounded-full border-2 border-primary/40 p-1 bg-background hover:scale-110 transition-transform">
+            <Avatar className="w-full h-full">
+              <AvatarImage src="https://picsum.photos/seed/node2/150/150" />
+            </Avatar>
+          </div>
+          <div className="absolute -right-12 top-1/2 -translate-y-1/2 bg-accent/20 border border-accent/40 px-2 py-1 rounded text-[8px] font-black text-accent uppercase">
+            Bridge Node
+          </div>
+        </div>
 
-           {/* Legend Section */}
-           <div className="absolute bottom-6 left-6 flex flex-col gap-3">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-primary rounded" />
-                <span className="text-[10px] font-bold text-foreground">Facility Bridge</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-accent rounded-full" />
-                <span className="text-[10px] font-bold text-foreground">Community Cluster</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-orange-500 rounded-full" />
-                <span className="text-[10px] font-bold text-foreground">Key Influencer</span>
-              </div>
-           </div>
+        <div className="absolute top-[60%] left-[20%] -translate-x-1/2 -translate-y-1/2 group cursor-pointer">
+          <div className="w-14 h-14 rounded-full border-2 border-accent/40 p-1 bg-background hover:scale-110 transition-transform">
+            <Avatar className="w-full h-full">
+              <AvatarImage src="https://picsum.photos/seed/node3/150/150" />
+            </Avatar>
+          </div>
+          <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2">
+             <MessageSquare className="h-4 w-4 text-accent animate-bounce" />
+          </div>
+        </div>
 
-           <div className="absolute top-6 right-6">
-              <Badge variant="outline" className="bg-background/80 backdrop-blur border-primary/20 text-primary animate-pulse">
-                SNA Live Relationship Flow
-              </Badge>
-           </div>
-        </Card>
+        <div className="absolute top-[65%] left-[80%] -translate-x-1/2 -translate-y-1/2 group cursor-pointer">
+           <div className="w-12 h-12 rounded-full border-2 border-primary/20 p-1 bg-background hover:scale-110 transition-transform">
+            <Avatar className="w-full h-full">
+              <AvatarImage src="https://picsum.photos/seed/node4/150/150" />
+            </Avatar>
+          </div>
+          <Globe className="absolute -bottom-2 -right-2 h-4 w-4 text-primary bg-background rounded-full p-0.5 border border-primary/40" />
+        </div>
+      </div>
 
-        <Card className="h-fit bg-card/30 backdrop-blur-sm border-border/50">
-          <CardHeader>
-            <CardTitle className="text-xl flex items-center gap-2">
-              <Zap className="h-5 w-5 text-primary" />
-              Relationship Intelligence
-            </CardTitle>
-            <CardDescription>Social relationships and engagement goals</CardDescription>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="divide-y divide-border/30 max-h-[500px] overflow-auto">
-              {hotspots.map((spot) => (
-                <div key={spot.id} className="p-4 space-y-3 hover:bg-primary/5 transition-colors group">
-                  <div className="flex justify-between items-start">
-                    <div className="flex items-center gap-3">
-                      <div className={cn(
-                        "p-2 rounded-lg",
-                        spot.type === 'Facility' ? "bg-primary/20" : spot.type === 'Community' ? "bg-accent/20" : "bg-orange-500/20"
-                      )}>
-                        {spot.type === 'Facility' ? <Info className="h-4 w-4 text-primary" /> : spot.type === 'Peer' ? <Zap className="h-4 w-4 text-orange-500" /> : <Users className="h-4 w-4 text-accent" />}
-                      </div>
-                      <div>
-                        <h4 className="font-bold text-sm text-foreground group-hover:text-primary transition-colors">{spot.name}</h4>
-                        <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Contact: {spot.contactPerson}</p>
-                      </div>
-                    </div>
-                    <Badge variant="outline" className={cn("text-[10px] font-bold py-0 h-5", getStrengthColor(spot.relationshipStrength))}>
-                      {spot.relationshipStrength}
-                    </Badge>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                       <Target className="h-3 w-3 text-primary" />
-                       <span className="font-semibold uppercase tracking-tighter">Strategic Goal:</span>
-                    </div>
-                    <p className="text-xs text-foreground/80 pl-5 border-l border-primary/20 italic">
-                      {spot.targetGoal}
-                    </p>
-                  </div>
-
-                  <div className="flex items-center justify-between pt-1">
-                    <div className="flex items-center gap-1">
-                       <div className="w-16 h-1 bg-muted rounded-full overflow-hidden">
-                          <div className="h-full bg-primary" style={{ width: `${spot.influenceScore}%` }} />
-                       </div>
-                       <span className="text-[10px] text-muted-foreground">{spot.influenceScore}% Influence</span>
-                    </div>
-                    <span className="text-[10px] font-black text-primary">{spot.reachCount} Reach</span>
-                  </div>
+      {/* Bottom Information Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Network Analytics Panel */}
+        <Card className="cyber-border border-primary/10 bg-background/40">
+          <CardContent className="p-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-black uppercase text-primary tracking-widest flex items-center gap-2">
+                <Activity className="h-4 w-4" /> Network Analytics
+              </h3>
+            </div>
+            <div className="h-24">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={analyticsData}>
+                  <Line type="monotone" dataKey="value" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
+                  <ChartTooltip 
+                    contentStyle={{ backgroundColor: 'rgba(0,0,0,0.8)', border: '1px solid rgba(0,255,255,0.2)', fontSize: '8px' }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="flex items-center justify-between pt-2">
+              <div className="space-y-1">
+                <p className="text-[10px] text-muted-foreground uppercase">Connection Growth</p>
+                <div className="flex items-center gap-2 text-xl font-black text-primary glow-cyan">
+                  <TrendingUp className="h-5 w-5" />
+                  +24.8%
                 </div>
-              ))}
+              </div>
+              <div className="relative h-12 w-12 flex flex-col items-center justify-center">
+                 <div className="absolute inset-0 border-2 border-primary/20 rounded-full" />
+                 <div className="absolute inset-0 border-t-2 border-primary rounded-full animate-spin" />
+                 <span className="text-[10px] font-black">78%</span>
+                 <p className="text-[6px] uppercase absolute -bottom-2">Activity</p>
+              </div>
             </div>
           </CardContent>
-          <div className="p-4 border-t border-border/30 bg-muted/20">
-            <Button variant="outline" className="w-full gap-2 text-xs border-primary/20 hover:border-primary">
-               <Share2 className="h-3 w-3" /> Export Influence Matrix
-            </Button>
-          </div>
+        </Card>
+
+        {/* Relationship Strength Panel */}
+        <Card className="cyber-border border-primary/10 bg-background/40 flex flex-col justify-center">
+          <CardContent className="p-6 space-y-6">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-tighter">
+                <span className="text-muted-foreground">Weak Relationships</span>
+                <span className="text-foreground">Bvrore - </span>
+              </div>
+              <div className="h-1 bg-muted rounded-full overflow-hidden">
+                <div className="h-full bg-accent/40 w-1/4" />
+              </div>
+            </div>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-tighter">
+                <span className="text-muted-foreground">Medium Relationships</span>
+                <span className="text-foreground">Fair connections - outreach apprentices</span>
+              </div>
+              <div className="h-1 bg-muted rounded-full overflow-hidden">
+                <div className="h-full bg-primary/40 w-2/4" />
+              </div>
+            </div>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-tighter">
+                <span className="text-primary glow-cyan">Strong Influences - Relationships</span>
+                <span className="text-foreground">CORE CLUSTERS</span>
+              </div>
+              <div className="h-1 bg-muted rounded-full overflow-hidden">
+                <div className="h-full bg-primary glow-cyan w-3/4 shadow-[0_0_10px_rgba(0,255,255,0.5)]" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Trending Topics Panel */}
+        <Card className="cyber-border border-primary/10 bg-background/40 relative">
+          <CardContent className="p-4 space-y-4">
+             <h3 className="text-xs font-black uppercase text-primary tracking-widest">
+               Trending Intelligence
+             </h3>
+             <div className="space-y-3">
+                {trendingTopics.map((topic) => (
+                  <div key={topic.tag} className="flex items-center justify-between group cursor-pointer">
+                    <span className="text-[10px] font-medium text-muted-foreground group-hover:text-primary transition-colors">
+                      {topic.tag}
+                    </span>
+                    <span className="text-[10px] font-black text-foreground bg-primary/10 px-2 rounded">
+                      {topic.count}
+                    </span>
+                  </div>
+                ))}
+             </div>
+             <div className="absolute bottom-4 right-4 group">
+                <Globe className="h-16 w-16 text-primary/20 group-hover:text-primary/40 transition-colors animate-[spin_10s_linear_infinite]" />
+             </div>
+          </CardContent>
         </Card>
       </div>
     </div>
