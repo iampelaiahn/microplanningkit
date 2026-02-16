@@ -25,7 +25,8 @@ import {
   ClipboardList,
   Target,
   Network,
-  Filter
+  Filter,
+  XCircle
 } from 'lucide-react'
 import { generateRiskAssessmentSummary } from '@/ai/flows/generate-risk-assessment-summary'
 import { toast } from '@/hooks/use-toast'
@@ -84,6 +85,7 @@ export default function AssessmentManagementPage() {
   const [selectedToolId, setSelectedToolId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('repository');
   const [selectedWard, setSelectedWard] = useState<string>("All");
+  const [activeFactorFilter, setActiveFactorFilter] = useState<string | null>(null);
   
   // Assessment Engine State
   const [uin, setUin] = useState("");
@@ -101,9 +103,15 @@ export default function AssessmentManagementPage() {
   );
 
   const filteredAssessments = useMemo(() => {
-    if (selectedWard === "All") return assessments;
-    return assessments.filter(a => a.ward === selectedWard);
-  }, [assessments, selectedWard]);
+    let result = assessments;
+    if (selectedWard !== "All") {
+      result = result.filter(a => a.ward === selectedWard);
+    }
+    if (activeFactorFilter) {
+      result = result.filter(a => a.factors?.includes(activeFactorFilter));
+    }
+    return result;
+  }, [assessments, selectedWard, activeFactorFilter]);
 
   // KPI Calculations
   const stats = useMemo(() => {
@@ -338,20 +346,43 @@ export default function AssessmentManagementPage() {
              {/* Enhanced KPI Sidebar */}
              <Card className="md:col-span-1 cyber-border border-primary/10 bg-background/40 p-4 space-y-8">
                 <div>
-                  <h3 className="text-xs font-black uppercase text-primary tracking-widest flex items-center gap-2 mb-4">
-                    <BarChart3 className="h-4 w-4" /> Risk Factors Prevalence
-                  </h3>
-                  <div className="space-y-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-xs font-black uppercase text-primary tracking-widest flex items-center gap-2">
+                      <BarChart3 className="h-4 w-4" /> Risk Factors Prevalence
+                    </h3>
+                    {activeFactorFilter && (
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-6 w-6 text-accent hover:text-accent/80"
+                        onClick={() => setActiveFactorFilter(null)}
+                      >
+                        <XCircle className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                  <div className="space-y-3">
                     {RISK_FACTORS.map((factor) => {
                       const count = stats.factorCounts[factor];
                       const percentage = stats.total > 0 ? Math.round((count / stats.total) * 100) : 0;
+                      const isActive = activeFactorFilter === factor;
                       return (
-                        <div key={factor} className="space-y-1">
+                        <div 
+                          key={factor} 
+                          className={cn(
+                            "space-y-1 cursor-pointer transition-all p-2 rounded-md border border-transparent group",
+                            isActive ? "bg-primary/10 border-primary/30" : "hover:bg-primary/5"
+                          )}
+                          onClick={() => setActiveFactorFilter(isActive ? null : factor)}
+                        >
                           <div className="flex justify-between text-[9px] font-bold uppercase">
-                            <span className="text-muted-foreground truncate max-w-[140px]">{factor}</span>
+                            <span className={cn(
+                              "truncate max-w-[140px] transition-colors",
+                              isActive ? "text-primary" : "text-muted-foreground group-hover:text-primary"
+                            )}>{factor}</span>
                             <span className="text-primary">{percentage}%</span>
                           </div>
-                          <Progress value={percentage} className="h-1 bg-muted" />
+                          <Progress value={percentage} className={cn("h-1 bg-muted/30", isActive && "bg-primary/20")} />
                         </div>
                       )
                     })}
@@ -386,7 +417,13 @@ export default function AssessmentManagementPage() {
                 <CardHeader className="flex flex-row items-center justify-between">
                    <div>
                      <CardTitle className="text-xl font-bold italic">Tool Ledger</CardTitle>
-                     <CardDescription>Records for {selectedWard} ({filteredAssessments.length} nodes)</CardDescription>
+                     <CardDescription>
+                       Records for {selectedWard} 
+                       {activeFactorFilter && (
+                         <span className="text-primary font-bold"> • Filtering by: {activeFactorFilter}</span>
+                       )}
+                       ({filteredAssessments.length} nodes)
+                     </CardDescription>
                    </div>
                    <div className="relative w-64">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -437,6 +474,13 @@ export default function AssessmentManagementPage() {
                       ))}
                     </TableBody>
                   </Table>
+                  {filteredAssessments.length === 0 && (
+                    <div className="py-20 text-center space-y-4 opacity-40">
+                      <Filter className="h-16 w-16 mx-auto text-muted-foreground" />
+                      <p className="text-lg font-medium italic">No records match the current filter criteria.</p>
+                      <Button variant="outline" size="sm" onClick={() => {setSelectedWard("All"); setActiveFactorFilter(null);}}>Clear All Filters</Button>
+                    </div>
+                  )}
                 </CardContent>
              </Card>
           </div>
