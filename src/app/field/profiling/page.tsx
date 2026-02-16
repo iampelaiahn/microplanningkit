@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState, useMemo } from 'react'
@@ -27,13 +28,14 @@ import {
   BrainCircuit, 
   Loader2,
   CheckCircle2,
-  Shield,
-  AlertCircle
+  Shield
 } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { generateHotspotRecommendation, type HotspotRecommendationOutput } from '@/ai/flows/generate-hotspot-recommendation'
+import { useFirestore, useUser, errorEmitter, FirestorePermissionError } from '@/firebase'
+import { collection, addDoc } from 'firebase/firestore'
 
 const KP_GROUPS = [
   { id: 'fsw', label: 'Female Sex Workers (FSW)', thresholds: { high: 50, med: 30 } },
@@ -52,6 +54,9 @@ const PE_PROFILE = {
 };
 
 export default function SpotProfilingPage() {
+  const firestore = useFirestore();
+  const { user } = useUser();
+
   // Identification State
   const [isNew, setIsNew] = useState("New");
   const [siteName, setSiteName] = useState("");
@@ -179,7 +184,7 @@ export default function SpotProfilingPage() {
     }
   };
 
-  const handleCommit = () => {
+  const handleCommit = async () => {
     const errors = validateForm();
     if (errors.length > 0) {
       toast({ 
@@ -190,11 +195,48 @@ export default function SpotProfilingPage() {
       return;
     }
 
+    if (!user) {
+      toast({ title: "Auth Required", description: "Sign in to commit profiles.", variant: "destructive" });
+      return;
+    }
+
+    const profileData = {
+      peerEducatorId: user.uid,
+      siteName,
+      hotspotName,
+      ward: PE_PROFILE.assignedWard,
+      area,
+      cluster,
+      profilingDate,
+      microplanner,
+      lat: parseFloat(coords.lat) || 0,
+      lng: parseFloat(coords.lng) || 0,
+      typology,
+      populationData: popData,
+      services,
+      structural,
+      aiAnalysis: aiResult?.analysis || "",
+      aiRecommendations: aiResult?.recommendations || [],
+      priorityLevel: aiResult?.priorityLevel || "Standard",
+      timestamp: new Date().toISOString()
+    };
+
+    if (firestore) {
+      addDoc(collection(firestore, 'hotspotProfiles'), profileData)
+        .catch(async (e) => {
+          const permissionError = new FirestorePermissionError({
+            path: 'hotspotProfiles',
+            operation: 'create',
+            requestResourceData: profileData
+          });
+          errorEmitter.emit('permission-error', permissionError);
+        });
+    }
+
     toast({ 
       title: "Profile Committed", 
       description: `Hotspot ${hotspotName} has been saved to the field ledger.` 
     });
-    // Here we would typically trigger a redirect or clear the form
   };
 
   return (

@@ -34,6 +34,32 @@
         "timestamp": { "type": "string", "format": "date-time" }
       },
       "required": ["uin", "visitDate", "riskLevel", "peerEducatorId"]
+    },
+    "HotspotProfile": {
+      "title": "Hotspot Profile",
+      "description": "Site-specific profiling data for a health hotspot.",
+      "type": "object",
+      "properties": {
+        "peerEducatorId": { "type": "string" },
+        "siteName": { "type": "string" },
+        "hotspotName": { "type": "string" },
+        "ward": { "type": "string" },
+        "area": { "type": "string" },
+        "cluster": { "type": "string" },
+        "profilingDate": { "type": "string", "format": "date" },
+        "microplanner": { "type": "string" },
+        "lat": { "type": "number" },
+        "lng": { "type": "number" },
+        "typology": { "type": "array", "items": { "type": "string" } },
+        "populationData": { "type": "object" },
+        "services": { "type": "object" },
+        "structural": { "type": "object" },
+        "aiAnalysis": { "type": "string" },
+        "aiRecommendations": { "type": "array", "items": { "type": "string" } },
+        "priorityLevel": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["hotspotName", "ward", "peerEducatorId", "timestamp"]
     }
   },
   "auth": {
@@ -43,6 +69,10 @@
     "/outreachVisits/{visitId}": {
       "schema": "OutreachVisit",
       "description": "Collection of all outreach visits for tracking and stock management"
+    },
+    "/hotspotProfiles/{profileId}": {
+      "schema": "HotspotProfile",
+      "description": "Collection of site-specific profiling records"
     }
   }
 }

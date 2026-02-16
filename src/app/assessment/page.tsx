@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState, useMemo } from 'react'
@@ -32,7 +33,6 @@ import {
   MapPin
 } from 'lucide-react'
 import { generateRiskAssessmentSummary } from '@/ai/flows/generate-risk-assessment-summary'
-import { generateHotspotRecommendation } from '@/ai/flows/generate-hotspot-recommendation'
 import { toast } from '@/hooks/use-toast'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
@@ -40,7 +40,7 @@ import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { INITIAL_KPS, INITIAL_HOTSPOTS } from '@/lib/store'
+import { useCollection, useFirestore } from '@/firebase'
 import { Progress } from '@/components/ui/progress'
 
 const RISK_FACTORS = [
@@ -93,44 +93,52 @@ export default function AssessmentManagementPage() {
   const [selectedWard, setSelectedWard] = useState<string>("All");
   const [activeFactorFilter, setActiveFactorFilter] = useState<string | null>(null);
   
-  // Risk Assessment State
+  // Firestore Data
+  const { data: visits } = useCollection('outreachVisits');
+  const { data: hotspotProfiles } = useCollection('hotspotProfiles');
+
+  // Risk Assessment Engine State
   const [uin, setUin] = useState("");
   const [selectedFactors, setSelectedFactors] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [riskResult, setRiskResult] = useState<{ summary: string; rationale: string } | null>(null);
   const [assignedLevel, setAssignedLevel] = useState<'Low' | 'Medium' | 'High'>('Medium');
-  
-  // Hotspot Profiling Mock State
-  const [hotspotRecords, setHotspotRecords] = useState(INITIAL_HOTSPOTS);
-  const [assessments, setAssessments] = useState(() => 
-    INITIAL_KPS.map(a => ({
-      ...a,
-      factors: [RISK_FACTORS[Math.floor(Math.random() * RISK_FACTORS.length)]]
-    }))
-  );
 
   const isHotspotTool = selectedToolId === 'hotspot-profiling';
 
   // Stats Calculation
   const stats = useMemo(() => {
     if (isHotspotTool) {
-      const filtered = selectedWard === "All" ? hotspotRecords : hotspotRecords.filter(h => h.ward === selectedWard);
-      const highVolume = filtered.filter(h => h.reachCount > 50).length;
-      const criticalGaps = 3; // Mocking critical service gaps
+      const records = hotspotProfiles || [];
+      const filtered = selectedWard === "All" ? records : records.filter(h => h.ward === selectedWard);
+      
+      const totalPop = filtered.reduce((acc, h) => {
+        const pData = h.populationData || {};
+        return acc + Object.values(pData).reduce((pAcc: number, pCur: any) => pAcc + (pCur.total || 0), 0);
+      }, 0);
+
+      const highVolume = filtered.filter(h => {
+         const pData = h.populationData || {};
+         const total = Object.values(pData).reduce((pAcc: number, pCur: any) => pAcc + (pCur.total || 0), 0);
+         return total > 50;
+      }).length;
+
+      const criticalGaps = filtered.filter(h => (h.services?.condoms === false || h.services?.lube === false)).length;
       
       const typeCounts: Record<string, number> = {};
       TYPOLOGIES.forEach(t => typeCounts[t] = 0);
       filtered.forEach(h => {
-        const type = h.type === 'Community' ? 'Bar' : 'Hotel'; // Mocking mapping
-        if (typeCounts[type] !== undefined) typeCounts[type]++;
+        h.typology?.forEach((t: string) => {
+          if (typeCounts[t] !== undefined) typeCounts[t]++;
+        });
       });
 
-      return { total: filtered.length, highVolume, criticalGaps, typeCounts };
+      return { total: filtered.length, highVolume, criticalGaps, typeCounts, totalPop };
     } else {
-      let filtered = assessments;
+      const records = visits || [];
+      let filtered = records;
       if (selectedWard !== "All") filtered = filtered.filter(a => a.ward === selectedWard);
-      if (activeFactorFilter) filtered = filtered.filter(a => a.factors?.includes(activeFactorFilter));
-
+      
       const total = filtered.length;
       const levels = {
         High: filtered.filter(a => a.riskLevel === 'High').length,
@@ -141,14 +149,14 @@ export default function AssessmentManagementPage() {
       const factorCounts: Record<string, number> = {};
       RISK_FACTORS.forEach(f => factorCounts[f] = 0);
       filtered.forEach(a => {
-        a.factors?.forEach(f => {
+        a.topicsDiscussed?.forEach((f: string) => {
           if (factorCounts[f] !== undefined) factorCounts[f]++;
         });
       });
 
       return { total, levels, factorCounts };
     }
-  }, [isHotspotTool, selectedWard, hotspotRecords, assessments, activeFactorFilter]);
+  }, [isHotspotTool, selectedWard, hotspotProfiles, visits]);
 
   const handleAssessment = async () => {
     if (!uin) {
@@ -162,16 +170,7 @@ export default function AssessmentManagementPage() {
         assignedRiskLevel: assignedLevel
       });
       setRiskResult(output);
-      setAssessments(prev => [{
-        id: `kp-${Date.now()}`,
-        uin,
-        riskLevel: assignedLevel,
-        ward: 'Ward 3',
-        lastAssessment: new Date().toISOString().split('T')[0],
-        verificationStatus: 'Pending',
-        meetingCount: 1,
-        factors: selectedFactors
-      }, ...prev]);
+      toast({ title: "Intelligence Analysis Generated" });
     } catch (error) {
       toast({ title: "AI Analysis Failed", variant: "destructive" });
     } finally {
@@ -257,7 +256,7 @@ export default function AssessmentManagementPage() {
                 {isHotspotTool ? 'Hotspot Profiler Analysis' : 'Risk Intelligence Analysis'}
               </h1>
             </div>
-            <p className="text-muted-foreground mt-1">Real-time KPI tracking and repository management</p>
+            <p className="text-muted-foreground mt-1">Real-time KPI tracking from peer educator records</p>
           </div>
         </div>
         
@@ -298,8 +297,8 @@ export default function AssessmentManagementPage() {
               <p className="text-2xl font-black text-orange-500">{stats.criticalGaps}</p>
             </Card>
             <Card className="bg-muted/5 border-l-4 border-l-muted-foreground px-6 py-4">
-              <p className="text-[10px] font-black uppercase text-muted-foreground">Reach Estimate</p>
-              <p className="text-2xl font-black text-foreground">~420 KP</p>
+              <p className="text-[10px] font-black uppercase text-muted-foreground">Pop. Estimate</p>
+              <p className="text-2xl font-black text-foreground">~{(stats as any).totalPop}</p>
             </Card>
           </>
         ) : (
@@ -401,24 +400,28 @@ export default function AssessmentManagementPage() {
                     </TableHeader>
                     <TableBody>
                       {isHotspotTool ? (
-                        hotspotRecords.filter(h => selectedWard === "All" || h.ward === selectedWard).map((record) => (
-                          <TableRow key={record.id} className="hover:bg-primary/5 border-primary/5">
-                            <TableCell className="pl-6 font-bold">{record.name}</TableCell>
-                            <TableCell className="text-xs">{record.ward}</TableCell>
-                            <TableCell><Badge variant="outline" className="text-[10px] uppercase">{record.type === 'Community' ? 'Bar' : 'Hotel'}</Badge></TableCell>
-                            <TableCell className="text-xs font-black text-primary">{record.reachCount}</TableCell>
-                            <TableCell className="text-right pr-6">
-                               <Badge className={cn("text-[10px] font-black uppercase", record.reachCount > 50 ? "bg-accent" : "bg-muted")}>
-                                 {record.reachCount > 50 ? 'Critical' : 'Standard'}
-                               </Badge>
-                            </TableCell>
-                          </TableRow>
-                        ))
+                        (hotspotProfiles || []).filter(h => selectedWard === "All" || h.ward === selectedWard).map((record) => {
+                          const pData = record.populationData || {};
+                          const total = Object.values(pData).reduce((acc: number, cur: any) => acc + (cur.total || 0), 0);
+                          return (
+                            <TableRow key={record.id} className="hover:bg-primary/5 border-primary/5">
+                              <TableCell className="pl-6 font-bold">{record.hotspotName}</TableCell>
+                              <TableCell className="text-xs">{record.ward}</TableCell>
+                              <TableCell><Badge variant="outline" className="text-[10px] uppercase">{record.typology?.[0] || 'Unknown'}</Badge></TableCell>
+                              <TableCell className="text-xs font-black text-primary">{total}</TableCell>
+                              <TableCell className="text-right pr-6">
+                                <Badge className={cn("text-[10px] font-black uppercase", record.priorityLevel === 'Critical' ? "bg-accent" : "bg-muted")}>
+                                  {record.priorityLevel || 'Standard'}
+                                </Badge>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })
                       ) : (
-                        assessments.filter(a => selectedWard === "All" || a.ward === selectedWard).map((record) => (
+                        (visits || []).filter(a => selectedWard === "All" || a.ward === selectedWard).map((record) => (
                           <TableRow key={record.id} className="hover:bg-primary/5 border-primary/5">
                             <TableCell className="pl-6 font-bold">{record.uin}</TableCell>
-                            <TableCell className="text-xs">{record.ward}</TableCell>
+                            <TableCell className="text-xs">{record.ward || 'Ward 3'}</TableCell>
                             <TableCell>
                               <Badge className={cn(
                                 "font-black uppercase text-[10px]",
@@ -427,10 +430,10 @@ export default function AssessmentManagementPage() {
                                 "bg-muted text-muted-foreground"
                               )}>{record.riskLevel}</Badge>
                             </TableCell>
-                            <TableCell className="text-xs text-muted-foreground">{record.lastAssessment}</TableCell>
+                            <TableCell className="text-xs text-muted-foreground">{new Date(record.timestamp).toLocaleDateString()}</TableCell>
                             <TableCell className="text-right pr-6">
                                <div className="flex items-center justify-end gap-2 text-[10px] font-bold">
-                                  {record.verificationStatus === 'Verified' ? <span className="text-primary flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> Verified</span> : <span className="text-accent flex items-center gap-1"><Clock className="h-3 w-3" /> Pending</span>}
+                                  {record.riskLevel === 'High' ? <span className="text-accent flex items-center gap-1"><AlertTriangle className="h-3 w-3" /> Critical</span> : <span className="text-primary flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> Standard</span>}
                                </div>
                             </TableCell>
                           </TableRow>
