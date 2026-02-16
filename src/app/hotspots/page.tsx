@@ -1,6 +1,7 @@
+
 "use client"
 
-import React from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -16,7 +17,8 @@ import {
   Activity,
   Zap,
   Users,
-  Link as LinkIcon
+  Link as LinkIcon,
+  Move
 } from 'lucide-react'
 import { 
   LineChart, 
@@ -44,9 +46,63 @@ const trendingTopics = [
   { tag: '#PeerReach', count: '640' },
 ];
 
+type Node = {
+  id: string;
+  x: number;
+  y: number;
+  type: string;
+  label: string;
+  imgSeed: string;
+  color?: string;
+  icon?: any;
+};
+
 export default function SocialNetworkMapPage() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null);
+  
+  const [nodes, setNodes] = useState<Node[]>([
+    { id: 'pe', x: 50, y: 50, type: 'core', label: 'Peer Educator', imgSeed: 'peereducator' },
+    { id: 'leader', x: 25, y: 25, type: 'satellite', label: 'Trust Leader', imgSeed: 'node_leader' },
+    { id: 'bridge', x: 75, y: 25, type: 'satellite', label: 'Bridge Node', imgSeed: 'node_bridge', color: 'text-accent' },
+    { id: 'high', x: 80, y: 40, type: 'satellite', label: 'High Influence', imgSeed: 'node_high' },
+    { id: 'active', x: 20, y: 65, type: 'satellite', label: 'Active Participant', imgSeed: 'node_active' },
+    { id: 'new', x: 85, y: 70, type: 'satellite', label: 'New Connection', imgSeed: 'node_new' },
+    { id: 'hub', x: 15, y: 45, type: 'satellite', label: 'Community Hub', imgSeed: 'node_hub' },
+  ]);
+
+  const handlePointerDown = (id: string) => (e: React.PointerEvent) => {
+    e.stopPropagation();
+    setDraggingNodeId(id);
+  };
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!draggingNodeId || !containerRef.current) return;
+    
+    const rect = containerRef.current.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+
+    setNodes(prev => prev.map(node => 
+      node.id === draggingNodeId 
+        ? { ...node, x: Math.max(5, Math.min(95, x)), y: Math.max(5, Math.min(95, y)) }
+        : node
+    ));
+  };
+
+  const handlePointerUp = () => {
+    setDraggingNodeId(null);
+  };
+
+  const getNode = (id: string) => nodes.find(n => n.id === id)!;
+
   return (
-    <div className="min-h-screen bg-background bg-grid p-6 space-y-6 overflow-hidden">
+    <div 
+      className="min-h-screen bg-background bg-grid p-6 space-y-6 overflow-hidden select-none"
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerLeave={handlePointerUp}
+    >
       {/* Top Navigation Bar */}
       <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
         <div className="flex items-center gap-8 w-full lg:w-auto">
@@ -95,114 +151,114 @@ export default function SocialNetworkMapPage() {
       </div>
 
       {/* Central Graph Area */}
-      <div className="relative flex-1 h-[600px] cyber-border border-primary/10 overflow-hidden bg-[radial-gradient(circle_at_center,rgba(0,255,255,0.05)_0%,transparent_70%)]">
-        {/* Glow Lines SVG - Connecting nodes based on their % positions */}
+      <div 
+        ref={containerRef}
+        className="relative flex-1 h-[600px] cyber-border border-primary/10 overflow-hidden bg-[radial-gradient(circle_at_center,rgba(0,255,255,0.05)_0%,transparent_70%)] touch-none"
+      >
+        {/* Glow Lines SVG - Connecting nodes based on their state positions */}
         <svg className="absolute inset-0 w-full h-full network-line opacity-40">
           {/* Main Hub Connections */}
-          <line x1="50%" y1="50%" x2="25%" y2="25%" stroke="hsl(var(--primary))" strokeWidth="2" strokeDasharray="10 5" />
-          <line x1="50%" y1="50%" x2="75%" y2="25%" stroke="hsl(var(--primary))" strokeWidth="2" />
-          <line x1="50%" y1="50%" x2="20%" y2="65%" stroke="hsl(var(--accent))" strokeWidth="1" strokeDasharray="5 5" />
-          <line x1="50%" y1="50%" x2="85%" y2="70%" stroke="hsl(var(--primary))" strokeWidth="1" />
-          <line x1="50%" y1="50%" x2="80%" y2="40%" stroke="hsl(var(--primary))" strokeWidth="1.5" />
-          <line x1="50%" y1="50%" x2="15%" y2="45%" stroke="hsl(var(--accent))" strokeWidth="1" />
+          {['leader', 'bridge', 'high', 'active', 'new', 'hub'].map(targetId => {
+            const pe = getNode('pe');
+            const target = getNode(targetId);
+            return (
+              <line 
+                key={targetId}
+                x1={`${pe.x}%`} y1={`${pe.y}%`} 
+                x2={`${target.x}%`} y2={`${target.y}%`} 
+                stroke={targetId === 'active' || targetId === 'hub' ? "hsl(var(--accent))" : "hsl(var(--primary))"} 
+                strokeWidth={targetId === 'leader' ? "2" : "1"} 
+                strokeDasharray={targetId === 'leader' ? "10 5" : "none"}
+              />
+            )
+          })}
           
-          {/* Secondary Connections (Relationships between satellites) */}
-          <line x1="25%" y1="25%" x2="15%" y2="45%" stroke="hsl(var(--primary))" strokeWidth="0.5" opacity="0.3" />
-          <line x1="75%" y1="25%" x2="80%" y2="40%" stroke="hsl(var(--primary))" strokeWidth="0.5" opacity="0.3" />
+          {/* Secondary Connections */}
+          <line 
+            x1={`${getNode('leader').x}%`} y1={`${getNode('leader').y}%`} 
+            x2={`${getNode('hub').x}%`} y2={`${getNode('hub').y}%`} 
+            stroke="hsl(var(--primary))" strokeWidth="0.5" opacity="0.3" 
+          />
+          <line 
+            x1={`${getNode('bridge').x}%`} y1={`${getNode('bridge').y}%`} 
+            x2={`${getNode('high').x}%`} y2={`${getNode('high').y}%`} 
+            stroke="hsl(var(--primary))" strokeWidth="0.5" opacity="0.3" 
+          />
 
-          {/* Connection Particles */}
-          <circle cx="37.5%" cy="37.5%" r="2" fill="hsl(var(--primary))" className="animate-ping" />
-          <circle cx="62.5%" cy="37.5%" r="2" fill="hsl(var(--accent))" className="animate-ping" style={{ animationDelay: '1s' }} />
-          <circle cx="65%" cy="45%" r="2" fill="hsl(var(--primary))" className="animate-pulse" />
+          {/* Connection Particles (Mock animated points) */}
+          <circle cx={`${(getNode('pe').x + getNode('leader').x) / 2}%`} cy={`${(getNode('pe').y + getNode('leader').y) / 2}%`} r="2" fill="hsl(var(--primary))" className="animate-ping" />
+          <circle cx={`${(getNode('pe').x + getNode('bridge').x) / 2}%`} cy={`${(getNode('pe').y + getNode('bridge').y) / 2}%`} r="2" fill="hsl(var(--accent))" className="animate-ping" style={{ animationDelay: '1s' }} />
         </svg>
 
         {/* Central Core Node - Peer Educator */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30">
+        <div 
+          className="absolute z-30 cursor-grab active:cursor-grabbing group"
+          style={{ top: `${getNode('pe').y}%`, left: `${getNode('pe').x}%`, transform: 'translate(-50%, -50%)' }}
+          onPointerDown={handlePointerDown('pe')}
+        >
           <div className="relative">
             <div className="absolute inset-0 bg-primary/20 rounded-full blur-3xl animate-pulse" />
-            <div className="w-36 h-36 rounded-full border-4 border-primary p-1 bg-background shadow-[0_0_50px_rgba(0,255,255,0.4)] relative z-10">
+            <div className="w-32 h-32 rounded-full border-4 border-primary p-1 bg-background shadow-[0_0_50px_rgba(0,255,255,0.4)] relative z-10 transition-transform group-hover:scale-105">
               <Avatar className="w-full h-full border-2 border-primary/20">
-                <AvatarImage src="https://picsum.photos/seed/peereducator/300/300" />
+                <AvatarImage src={`https://picsum.photos/seed/${getNode('pe').imgSeed}/300/300`} />
                 <AvatarFallback>PE</AvatarFallback>
               </Avatar>
             </div>
-            <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap bg-primary text-background px-4 py-1.5 rounded-sm text-[11px] font-black uppercase tracking-[0.2em] skew-x-[-12deg] z-20 shadow-lg">
+            <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap bg-primary text-background px-4 py-1.5 rounded-sm text-[11px] font-black uppercase tracking-[0.2em] skew-x-[-12deg] z-20 shadow-lg pointer-events-none">
               Peer Educator
             </div>
           </div>
         </div>
 
-        {/* Satellite Node 1: Trust Leader (Top Left) */}
-        <div className="absolute top-[25%] left-[25%] -translate-x-1/2 -translate-y-1/2 group cursor-pointer z-20">
-          <div className="w-20 h-20 rounded-full border-2 border-primary p-1 bg-background hover:scale-110 transition-transform shadow-[0_0_15px_rgba(0,255,255,0.2)]">
-            <Avatar className="w-full h-full">
-              <AvatarImage src="https://picsum.photos/seed/node_leader/150/150" />
-            </Avatar>
-          </div>
-          <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-background border-none text-[8px] font-black px-2">LEADER</Badge>
-          <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap bg-background/90 px-2 py-1 border border-primary/30 text-[9px] font-bold">
-            Trust Level: Critical
-          </div>
-        </div>
+        {/* Satellite Nodes */}
+        {nodes.filter(n => n.type === 'satellite').map(node => (
+          <div 
+            key={node.id}
+            className="absolute z-20 group cursor-grab active:cursor-grabbing"
+            style={{ top: `${node.y}%`, left: `${node.x}%`, transform: 'translate(-50%, -50%)' }}
+            onPointerDown={handlePointerDown(node.id)}
+          >
+            <div className={cn(
+              "rounded-full border-2 p-1 bg-background hover:scale-110 transition-transform shadow-lg",
+              node.id === 'leader' ? "w-20 h-20 border-primary shadow-[0_0_15px_rgba(0,255,255,0.2)]" : 
+              node.id === 'bridge' ? "w-18 h-18 border-primary/60" :
+              node.id === 'high' ? "w-16 h-16 border-primary/40" :
+              node.id === 'active' ? "w-16 h-16 border-accent/40" :
+              node.id === 'new' ? "w-14 h-14 border-primary/20" :
+              "w-14 h-14 border-muted"
+            )}>
+              <Avatar className="w-full h-full">
+                <AvatarImage src={`https://picsum.photos/seed/${node.imgSeed}/150/150`} />
+              </Avatar>
+            </div>
+            
+            {/* Contextual Badges/Icons for nodes */}
+            {node.id === 'leader' && <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-background border-none text-[8px] font-black px-2 pointer-events-none">LEADER</Badge>}
+            {node.id === 'bridge' && (
+              <div className="absolute -right-4 -top-2 bg-accent/20 border border-accent/40 p-1 rounded-full pointer-events-none">
+                <LinkIcon className="h-3 w-3 text-accent" />
+              </div>
+            )}
+            {node.id === 'high' && (
+              <div className="absolute -bottom-2 -right-2 pointer-events-none">
+                <Zap className="h-5 w-5 text-primary animate-flicker" />
+              </div>
+            )}
+            {node.id === 'active' && (
+              <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 pointer-events-none">
+                 <MessageSquare className="h-4 w-4 text-accent animate-bounce" />
+              </div>
+            )}
+            {node.id === 'new' && <UserPlus className="absolute -top-2 -right-2 h-4 w-4 text-primary bg-background rounded-full p-0.5 border border-primary/40 pointer-events-none" />}
+            {node.id === 'hub' && <Users className="absolute -bottom-2 -left-2 h-4 w-4 text-muted-foreground pointer-events-none" />}
 
-        {/* Satellite Node 2: Bridge Node (Top Right) */}
-        <div className="absolute top-[25%] left-[75%] -translate-x-1/2 -translate-y-1/2 group cursor-pointer z-20">
-          <div className="w-18 h-18 rounded-full border-2 border-primary/60 p-1 bg-background hover:scale-110 transition-transform">
-            <Avatar className="w-full h-full">
-              <AvatarImage src="https://picsum.photos/seed/node_bridge/150/150" />
-            </Avatar>
+            {/* Hover Tooltip */}
+            <div className="absolute top-full mt-4 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap bg-background/90 px-3 py-1.5 border border-primary/30 text-[10px] font-bold rounded shadow-xl pointer-events-none z-40">
+              <p className="text-primary uppercase tracking-wider">{node.label}</p>
+              <p className="text-muted-foreground text-[8px]">Drag to reorganize</p>
+            </div>
           </div>
-          <div className="absolute -right-4 -top-2 bg-accent/20 border border-accent/40 p-1 rounded-full">
-            <LinkIcon className="h-3 w-3 text-accent" />
-          </div>
-          <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 text-[9px] font-black text-accent uppercase tracking-widest whitespace-nowrap shadow-sm">
-            Bridge Node
-          </div>
-        </div>
-
-        {/* Satellite Node 3: High Influence (Mid Right) */}
-        <div className="absolute top-[40%] left-[80%] -translate-x-1/2 -translate-y-1/2 group cursor-pointer z-20">
-          <div className="w-16 h-16 rounded-full border-2 border-primary/40 p-1 bg-background hover:scale-110 transition-transform">
-            <Avatar className="w-full h-full">
-              <AvatarImage src="https://picsum.photos/seed/node_high/150/150" />
-            </Avatar>
-          </div>
-          <div className="absolute -bottom-2 -right-2">
-            <Zap className="h-5 w-5 text-primary animate-flicker" />
-          </div>
-        </div>
-
-        {/* Satellite Node 4: Active Participant (Bottom Left) */}
-        <div className="absolute top-[65%] left-[20%] -translate-x-1/2 -translate-y-1/2 group cursor-pointer z-20">
-          <div className="w-16 h-16 rounded-full border-2 border-accent/40 p-1 bg-background hover:scale-110 transition-transform">
-            <Avatar className="w-full h-full">
-              <AvatarImage src="https://picsum.photos/seed/node_active/150/150" />
-            </Avatar>
-          </div>
-          <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2">
-             <MessageSquare className="h-4 w-4 text-accent animate-bounce" />
-          </div>
-        </div>
-
-        {/* Satellite Node 5: New Connection (Bottom Right) */}
-        <div className="absolute top-[70%] left-[85%] -translate-x-1/2 -translate-y-1/2 group cursor-pointer z-20">
-           <div className="w-14 h-14 rounded-full border-2 border-primary/20 p-1 bg-background hover:scale-110 transition-transform">
-            <Avatar className="w-full h-full">
-              <AvatarImage src="https://picsum.photos/seed/node_new/150/150" />
-            </Avatar>
-          </div>
-          <UserPlus className="absolute -top-2 -right-2 h-4 w-4 text-primary bg-background rounded-full p-0.5 border border-primary/40" />
-        </div>
-
-        {/* Satellite Node 6: Community Hub (Mid Left) */}
-        <div className="absolute top-[45%] left-[15%] -translate-x-1/2 -translate-y-1/2 group cursor-pointer z-20">
-           <div className="w-14 h-14 rounded-full border-2 border-muted p-1 bg-background hover:scale-110 transition-transform">
-            <Avatar className="w-full h-full">
-              <AvatarImage src="https://picsum.photos/seed/node_hub/150/150" />
-            </Avatar>
-          </div>
-          <Users className="absolute -bottom-2 -left-2 h-4 w-4 text-muted-foreground" />
-        </div>
+        ))}
       </div>
 
       {/* Bottom Information Grid */}
