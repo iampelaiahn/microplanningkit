@@ -3,7 +3,7 @@
 
 import React from 'react'
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { ArrowRight, Shield, Map, BookOpen, Target, UserCheck, Sparkles } from 'lucide-react'
+import { ArrowRight, Shield, Map, BookOpen, Target, Sparkles } from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 
@@ -36,13 +36,6 @@ const modules = [
     href: '/field/profiling',
     color: 'text-primary',
     isActive: true
-  },
-  {
-    title: 'Supervisor Tools',
-    description: 'Track attendance, audit diaries, and view reports.',
-    icon: UserCheck,
-    href: '/dashboard',
-    color: 'text-primary'
   }
 ];
 
