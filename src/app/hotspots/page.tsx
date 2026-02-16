@@ -6,7 +6,6 @@ import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/ca
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { 
   Search, 
   Map as MapIcon, 
@@ -21,7 +20,8 @@ import {
   Building2,
   Users,
   MapPin,
-  Shield
+  Shield,
+  Compass
 } from 'lucide-react'
 import { 
   Dialog,
@@ -41,6 +41,7 @@ import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
 import { RelationshipStrength } from '@/lib/types'
 import { INITIAL_HOTSPOTS } from '@/lib/store'
+import { PlaceHolderImages } from '@/lib/placeholder-images'
 
 type Link = {
   from: string;
@@ -48,7 +49,7 @@ type Link = {
   strength: RelationshipStrength;
 };
 
-const EXPECTED_CASELOAD = 15; // Minimum nodes required for viability
+const EXPECTED_CASELOAD = 15;
 
 export default function SocialNetworkMapPage() {
   const [linkingMode, setLinkingMode] = useState(false);
@@ -64,7 +65,8 @@ export default function SocialNetworkMapPage() {
     { from: 'h3', to: 'h1', strength: 'Moderate' },
   ]);
 
-  // Map projection logic: Mbare bounds
+  const mapImage = PlaceHolderImages.find(img => img.id === 'mbare-map');
+
   const MAP_BOUNDS = {
     minLat: -17.868,
     maxLat: -17.850,
@@ -150,7 +152,6 @@ export default function SocialNetworkMapPage() {
         onPointerDown={handlePointerDown(hotspot.id)}
       >
         <div className="relative flex flex-col items-center">
-          {/* Custom Pin Design */}
           <div className={cn(
             "relative flex items-center justify-center w-12 h-12 rounded-full border-2 bg-background shadow-xl transition-all",
             hotspot.type === 'Facility' ? "border-primary text-primary shadow-primary/20" : 
@@ -162,7 +163,6 @@ export default function SocialNetworkMapPage() {
             {hotspot.type === 'Community' && <Target className="h-6 w-6" />}
             {hotspot.type === 'Peer' && <Shield className="h-6 w-6" />}
             
-            {/* Tooltip on Hover */}
             <div className="absolute bottom-full mb-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
                <Card className="p-2 border-primary/20 bg-background/95 backdrop-blur whitespace-nowrap">
                   <p className="text-[10px] font-black uppercase text-primary leading-none mb-1">{hotspot.name}</p>
@@ -174,7 +174,6 @@ export default function SocialNetworkMapPage() {
             </div>
           </div>
           
-          {/* Pin Tail */}
           <div className={cn(
             "w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[8px]",
             hotspot.type === 'Facility' ? "border-t-primary" : 
@@ -253,7 +252,6 @@ export default function SocialNetworkMapPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[700px]">
-        {/* Relationship Ledger */}
         <Card className="lg:col-span-1 cyber-border border-primary/10 bg-background/40 p-4 space-y-6 overflow-y-auto">
           <div className="space-y-1">
             <h2 className="text-xs font-black uppercase text-primary tracking-widest flex items-center gap-2">
@@ -297,17 +295,29 @@ export default function SocialNetworkMapPage() {
           </div>
         </Card>
 
-        {/* Geographic Map Container */}
-        <div className={cn(
-          "lg:col-span-3 relative h-full cyber-border border-primary/10 overflow-hidden",
-          "bg-[url('https://picsum.photos/seed/mbaremap/1200/800')] bg-cover bg-center grayscale opacity-90 contrast-125",
-          linkingMode && "ring-2 ring-accent/40 cursor-crosshair"
-        )}>
-          {/* Map Overlay Layer */}
+        <div 
+          className={cn(
+            "lg:col-span-3 relative h-full cyber-border border-primary/10 overflow-hidden",
+            "bg-cover bg-center grayscale opacity-90 contrast-125",
+            linkingMode && "ring-2 ring-accent/40 cursor-crosshair"
+          )}
+          style={{ backgroundImage: `url(${mapImage?.imageUrl})` }}
+          data-ai-hint="city map"
+        >
+          {/* Engine Header Overlay */}
+          <div className="absolute top-4 left-4 z-40 space-y-1 pointer-events-none">
+            <Badge className="bg-primary/80 text-background font-black uppercase text-[10px] tracking-widest shadow-lg">
+              Live Geo-Spatial Engine
+            </Badge>
+            <div className="flex items-center gap-2 text-[8px] font-bold text-primary/60 uppercase">
+              <Compass className="h-3 w-3" />
+              Mbare Field Grid v1.2
+            </div>
+          </div>
+
           <div className="absolute inset-0 bg-background/60 mix-blend-multiply pointer-events-none" />
           <div className="absolute inset-0 bg-grid opacity-20 pointer-events-none" />
 
-          {/* Connection Lines (SVG) */}
           <svg className="absolute inset-0 w-full h-full network-line opacity-60 pointer-events-none">
             {links.map((link, idx) => {
               const from = getHotspot(link.from);
@@ -319,11 +329,10 @@ export default function SocialNetworkMapPage() {
             })}
           </svg>
 
-          {/* Hotspot Pins */}
           {hotspots.map(hotspot => renderPin(hotspot))}
 
           {linkingMode && (
-             <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-accent text-background px-4 py-1.5 rounded-full font-black text-[10px] uppercase tracking-widest flex items-center gap-2 shadow-2xl animate-in fade-in slide-in-from-top-4">
+             <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-accent text-background px-4 py-1.5 rounded-full font-black text-[10px] uppercase tracking-widest flex items-center gap-2 shadow-2xl animate-in fade-in slide-in-from-top-4 z-50">
                 Linking Mode Active: Select Nodes
                 <Button variant="ghost" size="icon" className="h-4 w-4 text-background hover:bg-black/10 rounded-full" onClick={() => setLinkingMode(false)}>
                    <X className="h-3 w-3" />
@@ -331,8 +340,7 @@ export default function SocialNetworkMapPage() {
              </div>
           )}
 
-          {/* Compass Icon */}
-          <div className="absolute bottom-4 right-4 p-3 rounded-full bg-background/80 border border-primary/20 backdrop-blur">
+          <div className="absolute bottom-4 right-4 p-3 rounded-full bg-background/80 border border-primary/20 backdrop-blur z-40">
              <MapIcon className="h-5 w-5 text-primary opacity-40" />
           </div>
         </div>
