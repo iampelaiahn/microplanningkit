@@ -168,7 +168,7 @@ export default function OutreachTrackingPage() {
                     <SelectItem value="Low">Low (Monthly)</SelectItem>
                     <SelectItem value="Unknown">Unknown</SelectItem>
                   </SelectContent>
-                </RiskLevel>
+                </Select>
               </div>
               <div className="flex items-center space-x-3 pt-6">
                 <Checkbox id="reg" checked={registered} onCheckedChange={(c) => setRegistered(!!c)} />
