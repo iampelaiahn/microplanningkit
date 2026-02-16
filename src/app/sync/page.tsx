@@ -38,20 +38,22 @@ export default function SyncPage() {
     setSyncing(true);
     setProgress(0);
     
+    let currentProgress = 0;
     const interval = setInterval(() => {
-      setProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setSyncing(false);
-          setLastSync(new Date().toLocaleTimeString());
-          toast({
-            title: "Uplink Complete",
-            description: "Field data successfully pushed to central database.",
-          });
-          return 100;
-        }
-        return prev + 5;
-      });
+      currentProgress += 5;
+      
+      if (currentProgress >= 100) {
+        clearInterval(interval);
+        setProgress(100);
+        setSyncing(false);
+        setLastSync(new Date().toLocaleTimeString());
+        toast({
+          title: "Uplink Complete",
+          description: "Field data successfully pushed to central database.",
+        });
+      } else {
+        setProgress(currentProgress);
+      }
     }, 150);
   };
 
