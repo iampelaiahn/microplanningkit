@@ -18,7 +18,8 @@ import {
   RefreshCw,
   Users,
   UserCog,
-  ClipboardList
+  ClipboardList,
+  CalendarDays
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -29,11 +30,9 @@ export function Navigation() {
   const [role, setRole] = useState<'PE' | 'CHM'>('CHM');
 
   useEffect(() => {
-    // PE-specific routes
-    const peRoutes = ['/field/diary', '/field/assess', '/field/profiling', '/sync', '/hotspots'];
+    const peRoutes = ['/field', '/sync', '/hotspots'];
     const isPE = (peRoutes.some(r => pathname.startsWith(r)) && !pathname.startsWith('/hotspots/supervisor')) || pathname === '/field';
     
-    // CHM-specific routes
     const chmRoutes = ['/dashboard', '/inventory', '/assessment', '/monitoring', '/hotspots/supervisor'];
     const isCHM = chmRoutes.some(r => pathname.startsWith(r));
 
@@ -55,6 +54,7 @@ export function Navigation() {
   const peItems = [
     { name: 'Social Map', href: '/hotspots', icon: Network },
     { name: 'Diary', href: '/field/diary', icon: BookOpen },
+    { name: 'Outreach', href: '/field/outreach', icon: CalendarDays },
     { name: 'Assess', href: '/field/assess', icon: Shield },
     { name: 'Profile', href: '/field/profiling', icon: Target },
     { name: 'Sync', href: '/sync', icon: RefreshCw },
@@ -69,7 +69,6 @@ export function Navigation() {
       "flex flex-row items-center justify-between"
     )}>
       
-      {/* Brand - Desktop Only */}
       <div className="hidden md:flex flex-col gap-1 mb-10 px-2">
         <Link href="/" className="flex items-center gap-3">
           <div className="bg-primary/20 p-2 rounded-full border border-primary/40">
@@ -89,12 +88,10 @@ export function Navigation() {
         </div>
       </div>
 
-      {/* Home link for mobile */}
       <Link href="/" className="md:hidden p-2 text-muted-foreground hover:text-primary">
         <Home className="h-5 w-5" />
       </Link>
 
-      {/* Nav Items */}
       <div className="flex flex-row md:flex-col items-center md:items-stretch gap-1 md:gap-2 w-full">
         {currentItems.map((item) => {
           const isActive = pathname === item.href;
@@ -118,7 +115,6 @@ export function Navigation() {
         })}
       </div>
 
-      {/* User Info - Desktop Only */}
       <div className="hidden md:flex mt-auto p-4 border-t border-border/50 items-center justify-between w-full">
         <div className="flex items-center gap-3">
           <Avatar className="h-8 w-8 border-2 border-muted">

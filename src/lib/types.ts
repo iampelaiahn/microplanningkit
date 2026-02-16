@@ -1,5 +1,6 @@
 
-export type RiskLevel = 'Low' | 'Medium' | 'High';
+export type RiskLevel = 'Low' | 'Medium' | 'High' | 'Unknown';
+export type KPType = 'FSW' | 'MSW' | 'TG' | 'PWUD' | 'PWID' | 'HRM';
 
 export type StockItem = {
   id: string;
@@ -28,6 +29,8 @@ export type KPRecord = {
   lastAssessment: string;
   verificationStatus: 'Pending' | 'Verified';
   meetingCount: number;
+  kpType?: KPType;
+  isRegisteredAtClinic?: boolean;
 };
 
 export type RelationshipStrength = 'Weak' | 'Moderate' | 'Strong' | 'Critical';
@@ -44,4 +47,20 @@ export type Hotspot = {
   influenceScore?: number;
   targetGoal?: string;
   contactPerson?: string;
+};
+
+export type OutreachVisit = {
+  id: string;
+  visitDate: string;
+  peerName: string;
+  uin: string;
+  clinicDueDate: string;
+  riskLevel: RiskLevel;
+  planningMeetingDone: boolean;
+  maleCondomsDistributed: number;
+  femaleCondomsDistributed: number;
+  lubricantsDistributed: number;
+  topicsDiscussed: string[];
+  referralCode?: string;
+  otherSourceOfIncome: boolean;
 };
