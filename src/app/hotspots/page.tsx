@@ -1,8 +1,8 @@
 
 "use client"
 
-import React, { useState, useRef, useMemo } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import React, { useState, useRef } from 'react'
+import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -11,16 +11,13 @@ import {
   Search, 
   Mail, 
   Bell, 
-  UserPlus, 
   TrendingUp, 
   Globe, 
-  MessageSquare,
   Activity,
-  Zap,
-  Users,
+  Network,
   Link as LinkIcon,
   Plus,
-  Network
+  X
 } from 'lucide-react'
 import { 
   LineChart, 
@@ -86,6 +83,12 @@ export default function SocialNetworkMapPage() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null);
   
+  // Linking Mode State
+  const [linkingMode, setLinkingMode] = useState(false);
+  const [selectedSourceId, setSelectedSourceId] = useState<string | null>(null);
+  const [selectedTargetId, setSelectedTargetId] = useState<string | null>(null);
+  const [showStrengthDialog, setShowStrengthDialog] = useState(false);
+
   const [nodes, setNodes] = useState<Node[]>([
     { id: 'pe', x: 50, y: 50, type: 'core', label: 'Peer Educator', imgSeed: 'peereducator' },
     { id: 'leader', x: 25, y: 25, type: 'satellite', label: 'Trust Leader', imgSeed: 'node_leader' },
@@ -107,16 +110,22 @@ export default function SocialNetworkMapPage() {
     { from: 'bridge', to: 'high', strength: 'weak' },
   ]);
 
-  // For adding new nodes
   const [newNodeName, setNewNodeName] = useState('');
-  
-  // For adding new links
-  const [newLinkFrom, setNewLinkFrom] = useState('');
-  const [newLinkTo, setNewLinkTo] = useState('');
   const [newLinkStrength, setNewLinkStrength] = useState<RelationshipStrength>('moderate');
 
   const handlePointerDown = (id: string) => (e: React.PointerEvent) => {
     e.stopPropagation();
+    
+    if (linkingMode) {
+      if (!selectedSourceId) {
+        setSelectedSourceId(id);
+      } else if (!selectedTargetId && id !== selectedSourceId) {
+        setSelectedTargetId(id);
+        setShowStrengthDialog(id !== selectedSourceId);
+      }
+      return;
+    }
+
     setDraggingNodeId(id);
   };
 
@@ -153,13 +162,24 @@ export default function SocialNetworkMapPage() {
     setNewNodeName('');
   };
 
-  const addLink = () => {
-    if (!newLinkFrom || !newLinkTo || newLinkFrom === newLinkTo) return;
-    // Check if link already exists
-    const exists = links.find(l => (l.from === newLinkFrom && l.to === newLinkTo) || (l.from === newLinkTo && l.to === newLinkFrom));
-    if (exists) return;
+  const confirmLink = () => {
+    if (selectedSourceId && selectedTargetId) {
+      const exists = links.find(l => 
+        (l.from === selectedSourceId && l.to === selectedTargetId) || 
+        (l.from === selectedTargetId && l.to === selectedSourceId)
+      );
+      if (!exists) {
+        setLinks([...links, { from: selectedSourceId, to: selectedTargetId, strength: newLinkStrength }]);
+      }
+    }
+    cancelLinking();
+  };
 
-    setLinks([...links, { from: newLinkFrom, to: newLinkTo, strength: newLinkStrength }]);
+  const cancelLinking = () => {
+    setLinkingMode(false);
+    setSelectedSourceId(null);
+    setSelectedTargetId(null);
+    setShowStrengthDialog(false);
   };
 
   const getNode = (id: string) => nodes.find(n => n.id === id);
@@ -186,6 +206,23 @@ export default function SocialNetworkMapPage() {
       onPointerUp={handlePointerUp}
       onPointerLeave={handlePointerUp}
     >
+      {/* Step Instruction Overlay */}
+      {linkingMode && (
+        <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[60] bg-accent text-accent-foreground px-6 py-3 rounded-full font-bold shadow-2xl flex items-center gap-4 animate-in fade-in slide-in-from-top-4">
+          <LinkIcon className="h-4 w-4" />
+          <span>
+            {!selectedSourceId 
+              ? "Step 1: Click on the starting person" 
+              : !selectedTargetId 
+                ? `Step 2: Click on the second person to connect with ${getNode(selectedSourceId)?.label}`
+                : "Step 3: Define Relationship Strength"}
+          </span>
+          <Button variant="ghost" size="sm" onClick={cancelLinking} className="ml-2 hover:bg-black/10 h-8 w-8 p-0 rounded-full">
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
+
       {/* Top Navigation Bar */}
       <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
         <div className="flex items-center gap-8 w-full lg:w-auto">
@@ -230,60 +267,18 @@ export default function SocialNetworkMapPage() {
             </DialogContent>
           </Dialog>
 
-          {/* Add Line Dialog */}
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button className="bg-accent/20 border border-accent/40 hover:bg-accent/30 text-accent gap-2 h-10">
-                <LinkIcon className="h-4 w-4" /> Add Link
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="cyber-border bg-background border-primary/20">
-              <DialogHeader>
-                <DialogTitle className="text-primary glow-cyan">Establish Trust Link</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label>Source Node</Label>
-                  <Select value={newLinkFrom} onValueChange={setNewLinkFrom}>
-                    <SelectTrigger className="bg-muted/20 border-primary/10">
-                      <SelectValue placeholder="Select starting point" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {nodes.map(n => <SelectItem key={n.id} value={n.id}>{n.label}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Target Node</Label>
-                  <Select value={newLinkTo} onValueChange={setNewLinkTo}>
-                    <SelectTrigger className="bg-muted/20 border-primary/10">
-                      <SelectValue placeholder="Select end point" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {nodes.map(n => <SelectItem key={n.id} value={n.id}>{n.label}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Relationship Strength</Label>
-                  <Select value={newLinkStrength} onValueChange={(v: RelationshipStrength) => setNewLinkStrength(v)}>
-                    <SelectTrigger className="bg-muted/20 border-primary/10">
-                      <SelectValue placeholder="Select strength" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="weak">Weak / Initial</SelectItem>
-                      <SelectItem value="moderate">Moderate / Stable</SelectItem>
-                      <SelectItem value="strong">Strong / Mobilizer</SelectItem>
-                      <SelectItem value="critical">Critical / High Trust</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button onClick={addLink} className="bg-accent text-background font-bold w-full">Connect Nodes</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          {/* New Link Button (Direct Interaction) */}
+          <Button 
+            onClick={() => setLinkingMode(true)}
+            className={cn(
+              "border gap-2 h-10 transition-all",
+              linkingMode 
+                ? "bg-accent text-background border-accent shadow-[0_0_15px_rgba(255,120,0,0.5)] animate-pulse" 
+                : "bg-accent/20 border-accent/40 hover:bg-accent/30 text-accent"
+            )}
+          >
+            <LinkIcon className="h-4 w-4" /> Add Link
+          </Button>
 
           <div className="flex items-center gap-6 text-xs font-bold uppercase tracking-widest ml-4">
             <div className="flex items-center gap-2 group cursor-pointer hover:text-primary transition-colors">
@@ -322,54 +317,9 @@ export default function SocialNetworkMapPage() {
           </h2>
           
           <div className="space-y-4 pt-4 border-t border-primary/10">
-            <h3 className="text-[10px] font-black uppercase text-muted-foreground tracking-tighter">Quick Establish</h3>
-            <div className="space-y-3">
-              <div className="space-y-1">
-                <Label className="text-[9px] uppercase font-bold text-muted-foreground">Source</Label>
-                <Select value={newLinkFrom} onValueChange={setNewLinkFrom}>
-                  <SelectTrigger className="h-8 bg-muted/20 border-primary/10 text-xs">
-                    <SelectValue placeholder="Select node" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {nodes.map(n => <SelectItem key={n.id} value={n.id}>{n.label}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1">
-                <Label className="text-[9px] uppercase font-bold text-muted-foreground">Target</Label>
-                <Select value={newLinkTo} onValueChange={setNewLinkTo}>
-                  <SelectTrigger className="h-8 bg-muted/20 border-primary/10 text-xs">
-                    <SelectValue placeholder="Select node" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {nodes.map(n => <SelectItem key={n.id} value={n.id}>{n.label}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1">
-                <Label className="text-[9px] uppercase font-bold text-muted-foreground">Strength</Label>
-                <Select value={newLinkStrength} onValueChange={(v: RelationshipStrength) => setNewLinkStrength(v)}>
-                  <SelectTrigger className="h-8 bg-muted/20 border-primary/10 text-xs">
-                    <SelectValue placeholder="Relationship" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="weak">Weak / Initial</SelectItem>
-                    <SelectItem value="moderate">Moderate / Stable</SelectItem>
-                    <SelectItem value="strong">Strong / Mobilizer</SelectItem>
-                    <SelectItem value="critical">Critical / High Trust</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button onClick={addLink} className="w-full h-8 bg-accent text-background font-black text-[10px] uppercase">
-                Connect Nodes
-              </Button>
-            </div>
-          </div>
-
-          <div className="space-y-4 pt-4 border-t border-primary/10">
              <h3 className="text-[10px] font-black uppercase text-muted-foreground tracking-tighter">Active Links</h3>
              <div className="space-y-2">
-                {links.slice(-5).map((link, i) => (
+                {links.slice(-8).map((link, i) => (
                   <div key={i} className="flex items-center justify-between p-2 bg-muted/10 rounded border border-primary/5 text-[10px]">
                     <span className="truncate max-w-[50px]">{getNode(link.from)?.label}</span>
                     <LinkIcon className="h-2 w-2 text-primary" />
@@ -384,8 +334,18 @@ export default function SocialNetworkMapPage() {
         {/* Central Graph Area */}
         <div 
           ref={containerRef}
-          className="lg:col-span-3 relative h-full cyber-border border-primary/10 overflow-hidden bg-[radial-gradient(circle_at_center,rgba(0,255,255,0.05)_0%,transparent_70%)] touch-none"
+          className={cn(
+            "lg:col-span-3 relative h-full cyber-border border-primary/10 overflow-hidden bg-[radial-gradient(circle_at_center,rgba(0,255,255,0.05)_0%,transparent_70%)] touch-none transition-colors",
+            linkingMode && "bg-accent/5 ring-2 ring-accent/20 ring-inset"
+          )}
         >
+          {/* Instructions when in linking mode */}
+          {linkingMode && (
+             <div className="absolute inset-0 pointer-events-none flex items-center justify-center opacity-10">
+                <LinkIcon className="w-64 h-64 text-accent animate-pulse" />
+             </div>
+          )}
+
           {/* Glow Lines SVG */}
           <svg className="absolute inset-0 w-full h-full network-line opacity-40">
             {links.map((link, idx) => {
@@ -427,7 +387,10 @@ export default function SocialNetworkMapPage() {
             <div 
               key={node.id}
               className={cn(
-                "absolute z-30 cursor-grab active:cursor-grabbing group",
+                "absolute z-30 group transition-all",
+                !linkingMode ? "cursor-grab active:cursor-grabbing" : "cursor-pointer hover:scale-110",
+                node.id === selectedSourceId && "ring-4 ring-accent rounded-full ring-offset-4 ring-offset-background",
+                node.id === selectedTargetId && "ring-4 ring-primary rounded-full ring-offset-4 ring-offset-background",
                 node.type === 'core' && "z-40"
               )}
               style={{ top: `${node.y}%`, left: `${node.x}%`, transform: 'translate(-50%, -50%)' }}
@@ -436,8 +399,9 @@ export default function SocialNetworkMapPage() {
               <div className="relative">
                 {node.type === 'core' && <div className="absolute inset-0 bg-primary/20 rounded-full blur-3xl animate-pulse" />}
                 <div className={cn(
-                  "rounded-full border-2 p-1 bg-background transition-all hover:scale-110 shadow-lg",
-                  node.type === 'core' ? "w-28 h-28 border-primary shadow-[0_0_50px_rgba(0,255,255,0.4)]" : "w-16 h-16 border-primary/40"
+                  "rounded-full border-2 p-1 bg-background transition-all shadow-lg",
+                  node.type === 'core' ? "w-28 h-28 border-primary shadow-[0_0_50px_rgba(0,255,255,0.4)]" : "w-16 h-16 border-primary/40",
+                  linkingMode && node.id !== selectedSourceId && !selectedTargetId && "border-accent animate-pulse"
                 )}>
                   <Avatar className="w-full h-full border border-primary/10">
                     <AvatarImage src={`https://picsum.photos/seed/${node.imgSeed}/150/150`} />
@@ -456,9 +420,57 @@ export default function SocialNetworkMapPage() {
         </div>
       </div>
 
+      {/* Strength Selection Dialog */}
+      <Dialog open={showStrengthDialog} onOpenChange={(open) => !open && cancelLinking()}>
+        <DialogContent className="cyber-border bg-background border-primary/20">
+          <DialogHeader>
+            <DialogTitle className="text-primary glow-cyan">Establish Trust Link</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6 py-4">
+            <div className="flex items-center justify-around p-4 bg-muted/20 rounded-lg border border-primary/10">
+               <div className="text-center">
+                  <Avatar className="h-12 w-12 border-2 border-accent">
+                    <AvatarImage src={`https://picsum.photos/seed/${getNode(selectedSourceId!)?.imgSeed}/150/150`} />
+                  </Avatar>
+                  <p className="text-[10px] font-bold mt-2 uppercase">{getNode(selectedSourceId!)?.label}</p>
+               </div>
+               <div className="flex flex-col items-center">
+                  <LinkIcon className="h-6 w-6 text-primary animate-pulse" />
+                  <span className="text-[8px] font-black text-muted-foreground uppercase mt-1">Connecting</span>
+               </div>
+               <div className="text-center">
+                  <Avatar className="h-12 w-12 border-2 border-primary">
+                    <AvatarImage src={`https://picsum.photos/seed/${getNode(selectedTargetId!)?.imgSeed}/150/150`} />
+                  </Avatar>
+                  <p className="text-[10px] font-bold mt-2 uppercase">{getNode(selectedTargetId!)?.label}</p>
+               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs uppercase font-black text-muted-foreground">Relationship Strength</Label>
+              <Select value={newLinkStrength} onValueChange={(v: RelationshipStrength) => setNewLinkStrength(v)}>
+                <SelectTrigger className="bg-muted/20 border-primary/10 cyber-border h-12">
+                  <SelectValue placeholder="Select strength" />
+                </SelectTrigger>
+                <SelectContent className="bg-background cyber-border">
+                  <SelectItem value="weak">Weak / Initial Outreach</SelectItem>
+                  <SelectItem value="moderate">Moderate / Stable Contact</SelectItem>
+                  <SelectItem value="strong">Strong / Community Mobilizer</SelectItem>
+                  <SelectItem value="critical">Critical / High Trust Bridge</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={confirmLink} className="bg-accent text-background font-black uppercase w-full h-12 shadow-[0_0_20px_rgba(255,120,0,0.3)]">
+              Confirm Connection
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Bottom Information Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Network Analytics Panel */}
         <Card className="cyber-border border-primary/10 bg-background/40">
           <CardContent className="p-4 space-y-4">
             <h3 className="text-xs font-black uppercase text-primary tracking-widest flex items-center gap-2">
@@ -491,12 +503,11 @@ export default function SocialNetworkMapPage() {
           </CardContent>
         </Card>
 
-        {/* Relationship Strength Panel */}
         <Card className="cyber-border border-primary/10 bg-background/40 flex flex-col justify-center">
           <CardContent className="p-6 space-y-6">
             <div className="space-y-3">
               <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-tighter">
-                <span className="text-muted-foreground">Weak Connections</span>
+                <span className="text-muted-foreground">Initial Outreach</span>
                 <span className="text-foreground">{links.filter(l => l.strength === 'weak').length} Nodes</span>
               </div>
               <div className="h-1 bg-muted rounded-full overflow-hidden">
@@ -505,7 +516,7 @@ export default function SocialNetworkMapPage() {
             </div>
             <div className="space-y-3">
               <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-tighter">
-                <span className="text-muted-foreground">Stable Trusts</span>
+                <span className="text-muted-foreground">Regular Service Users</span>
                 <span className="text-foreground">{links.filter(l => l.strength === 'moderate').length} Nodes</span>
               </div>
               <div className="h-1 bg-muted rounded-full overflow-hidden">
@@ -514,8 +525,8 @@ export default function SocialNetworkMapPage() {
             </div>
             <div className="space-y-3">
               <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-tighter">
-                <span className="text-primary glow-cyan">Critical Mobilizers</span>
-                <span className="text-foreground">{links.filter(l => l.strength === 'critical').length} Nodes</span>
+                <span className="text-primary glow-cyan">Core Mobilizers</span>
+                <span className="text-foreground">{links.filter(l => l.strength === 'critical' || l.strength === 'strong').length} Nodes</span>
               </div>
               <div className="h-1 bg-muted rounded-full overflow-hidden">
                 <div className="h-full bg-primary glow-cyan w-3/4 shadow-[0_0_10px_rgba(0,255,255,0.5)]" />
@@ -524,7 +535,6 @@ export default function SocialNetworkMapPage() {
           </CardContent>
         </Card>
 
-        {/* Trending Topics Panel */}
         <Card className="cyber-border border-primary/10 bg-background/40 relative">
           <CardContent className="p-4 space-y-4">
              <h3 className="text-xs font-black uppercase text-primary tracking-widest">
