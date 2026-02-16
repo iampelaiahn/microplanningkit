@@ -160,7 +160,9 @@ export default function OutreachTrackingPage() {
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase text-muted-foreground">Baseline Risk Level *</Label>
                 <Select value={risk} onValueChange={(v: RiskLevel) => setRisk(v)}>
-                  <SelectTrigger className="bg-muted/20"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="bg-muted/20">
+                    <SelectValue />
+                  </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="High">High (Weekly Tracking)</SelectItem>
                     <SelectItem value="Medium">Medium (Bi-Monthly)</SelectItem>
@@ -179,7 +181,7 @@ export default function OutreachTrackingPage() {
           <Card className="cyber-border bg-background/40">
             <CardHeader className="border-b border-primary/10">
               <CardTitle className="text-xl font-black italic flex items-center gap-2">
-                <Package className="h-5 w-5 text-primary" /> Services & Commodities
+                <Package className="h-5 w-5 text-primary" /> 2. Services & Commodities
               </CardTitle>
               <CardDescription className="text-[10px] font-bold uppercase text-muted-foreground">Log all distributed items and clinical test results</CardDescription>
             </CardHeader>
@@ -199,8 +201,10 @@ export default function OutreachTrackingPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-primary/5 rounded-lg border border-primary/10">
-                <div className="space-y-4">
+              {/* Diagnostic Services - Separated HIVST and Pregnancy Tests */}
+              <div className="space-y-4">
+                {/* HIVST Service Block */}
+                <div className="p-4 bg-primary/5 rounded-lg border border-primary/10 space-y-4">
                   <div className="flex items-center gap-2 text-primary">
                     <Stethoscope className="h-4 w-4" />
                     <span className="text-[10px] font-black uppercase tracking-widest">HIVST Service</span>
@@ -213,7 +217,9 @@ export default function OutreachTrackingPage() {
                     <div className="flex-1 space-y-1">
                       <Label className="text-[8px] font-bold uppercase">Result</Label>
                       <Select value={services.hivstResult} onValueChange={(v) => setServices({...services, hivstResult: v})}>
-                        <SelectTrigger className="h-8 bg-background"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="h-8 bg-background">
+                          <SelectValue />
+                        </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="Pending">Pending</SelectItem>
                           <SelectItem value="Non-Reactive">Non-Reactive</SelectItem>
@@ -225,7 +231,8 @@ export default function OutreachTrackingPage() {
                   </div>
                 </div>
 
-                <div className="space-y-4">
+                {/* Pregnancy Test Service Block */}
+                <div className="p-4 bg-accent/5 rounded-lg border border-accent/10 space-y-4">
                   <div className="flex items-center gap-2 text-accent">
                     <Activity className="h-4 w-4" />
                     <span className="text-[10px] font-black uppercase tracking-widest">Pregnancy Test Service</span>
@@ -238,7 +245,9 @@ export default function OutreachTrackingPage() {
                     <div className="flex-1 space-y-1">
                       <Label className="text-[8px] font-bold uppercase">Result</Label>
                       <Select value={services.pregResult} onValueChange={(v) => setServices({...services, pregResult: v})}>
-                        <SelectTrigger className="h-8 bg-background"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="h-8 bg-background">
+                          <SelectValue />
+                        </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="Pending">Pending</SelectItem>
                           <SelectItem value="Negative">Negative</SelectItem>
