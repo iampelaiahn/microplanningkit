@@ -17,7 +17,8 @@ import {
   Target,
   RefreshCw,
   Users,
-  UserCog
+  UserCog,
+  ClipboardList
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -27,21 +28,25 @@ export function Navigation() {
   const pathname = usePathname();
   const [role, setRole] = useState<'PE' | 'CHM'>('CHM');
 
-  // Logic to determine role based on active path
   useEffect(() => {
-    const pePaths = ['/field/diary', '/field/assess', '/field/profiling', '/sync', '/hotspots'];
-    const isPEPath = pePaths.some(path => pathname.startsWith(path)) && !pathname.startsWith('/hotspots/supervisor');
+    // PE-specific routes
+    const peRoutes = ['/field/diary', '/field/assess', '/field/profiling', '/sync', '/hotspots'];
+    const isPE = (peRoutes.some(r => pathname.startsWith(r)) && !pathname.startsWith('/hotspots/supervisor')) || pathname === '/field';
     
-    if (isPEPath) {
-      setRole('PE');
-    } else if (pathname.startsWith('/dashboard') || pathname.startsWith('/inventory') || pathname.startsWith('/assessment')) {
+    // CHM-specific routes
+    const chmRoutes = ['/dashboard', '/inventory', '/assessment', '/monitoring', '/hotspots/supervisor'];
+    const isCHM = chmRoutes.some(r => pathname.startsWith(r));
+
+    if (isCHM) {
       setRole('CHM');
+    } else if (isPE) {
+      setRole('PE');
     }
   }, [pathname]);
 
   const chmItems = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-    { name: 'Field tracker', href: '/field', icon: Activity },
+    { name: 'Field tracker', href: '/monitoring', icon: Activity },
     { name: 'Hotspots', href: '/hotspots/supervisor', icon: Map },
     { name: 'Assessment repo', href: '/assessment', icon: ShieldCheck },
     { name: 'Inventory', href: '/inventory', icon: Package },
