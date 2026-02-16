@@ -121,7 +121,7 @@ export default function OutreachTrackingPage() {
           });
       }
 
-      toast({ title: "Visit Logged", description: `Outreach for node ${uin} committed to intelligence engine.` });
+      toast({ title: "Visit Logged", description: `Outreach for node ${uin} committed to database.` });
     } catch (e) {
       toast({ title: "System Error", description: "AI recommendation engine unreachable.", variant: "destructive" });
     } finally {
