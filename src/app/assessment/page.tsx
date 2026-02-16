@@ -1,7 +1,6 @@
-
 "use client"
 
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -25,7 +24,8 @@ import {
   LayoutGrid,
   ClipboardList,
   Target,
-  Network
+  Network,
+  Filter
 } from 'lucide-react'
 import { generateRiskAssessmentSummary } from '@/ai/flows/generate-risk-assessment-summary'
 import { toast } from '@/hooks/use-toast'
@@ -34,7 +34,9 @@ import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { INITIAL_KPS } from '@/lib/store'
+import { Progress } from '@/components/ui/progress'
 
 const RISK_FACTORS = [
   "Inconsistent condom use",
@@ -44,6 +46,8 @@ const RISK_FACTORS = [
   "Lack of access to health facilities",
   "Frequent travel away from home ward",
 ];
+
+const WARDS = ["All", "Ward 3", "Ward 4", "Ward 11", "Ward 12"];
 
 const DEPLOYED_TOOLS = [
   {
@@ -79,12 +83,47 @@ export default function AssessmentManagementPage() {
   const [view, setView] = useState<'library' | 'detail'>('library');
   const [selectedToolId, setSelectedToolId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('repository');
+  const [selectedWard, setSelectedWard] = useState<string>("All");
+  
+  // Assessment Engine State
   const [uin, setUin] = useState("");
   const [selectedFactors, setSelectedFactors] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<{ summary: string; rationale: string } | null>(null);
   const [assignedLevel, setAssignedLevel] = useState<'Low' | 'Medium' | 'High'>('Medium');
-  const [assessments, setAssessments] = useState(INITIAL_KPS);
+  
+  // Assessments Data with factor tracking for reporting
+  const [assessments, setAssessments] = useState(() => 
+    INITIAL_KPS.map(a => ({
+      ...a,
+      factors: [RISK_FACTORS[Math.floor(Math.random() * RISK_FACTORS.length)]]
+    }))
+  );
+
+  const filteredAssessments = useMemo(() => {
+    if (selectedWard === "All") return assessments;
+    return assessments.filter(a => a.ward === selectedWard);
+  }, [assessments, selectedWard]);
+
+  // KPI Calculations
+  const stats = useMemo(() => {
+    const total = filteredAssessments.length;
+    const levels = {
+      High: filteredAssessments.filter(a => a.riskLevel === 'High').length,
+      Medium: filteredAssessments.filter(a => a.riskLevel === 'Medium').length,
+      Low: filteredAssessments.filter(a => a.riskLevel === 'Low').length,
+    };
+
+    const factorCounts: Record<string, number> = {};
+    RISK_FACTORS.forEach(f => factorCounts[f] = 0);
+    filteredAssessments.forEach(a => {
+      a.factors?.forEach(f => {
+        if (factorCounts[f] !== undefined) factorCounts[f]++;
+      });
+    });
+
+    return { total, levels, factorCounts };
+  }, [filteredAssessments]);
 
   const toggleFactor = (factor: string) => {
     setSelectedFactors(prev => 
@@ -123,12 +162,13 @@ export default function AssessmentManagementPage() {
         id: `kp-${Date.now()}`,
         uin,
         riskLevel: assignedLevel,
-        ward: 'Ward 3', 
+        ward: 'Ward 3', // Mock ward for new entries
         lastAssessment: new Date().toISOString().split('T')[0],
         verificationStatus: 'Pending' as const,
-        meetingCount: 1
+        meetingCount: 1,
+        factors: selectedFactors
       };
-      setAssessments([newRecord, ...assessments]);
+      setAssessments(prev => [newRecord, ...prev]);
 
     } catch (error) {
       toast({
@@ -145,9 +185,6 @@ export default function AssessmentManagementPage() {
     setSelectedToolId(id);
     setView('detail');
   };
-
-  const highRiskCount = assessments.filter(a => a.riskLevel === 'High').length;
-  const pendingCount = assessments.filter(a => a.verificationStatus === 'Pending').length;
 
   if (view === 'library') {
     return (
@@ -227,26 +264,51 @@ export default function AssessmentManagementPage() {
             <p className="text-muted-foreground mt-1">Real-time KPI tracking and repository management</p>
           </div>
         </div>
-        <div className="flex gap-4">
-          <Card className="bg-primary/5 border-primary/20 px-6 py-3 flex items-center gap-4">
-             <div className="p-2 bg-primary/20 rounded-lg">
-                <Shield className="h-5 w-5 text-primary" />
-             </div>
-             <div>
-                <p className="text-[10px] font-black uppercase text-muted-foreground">Portfolio Size</p>
-                <p className="text-xl font-black text-foreground">{assessments.length}</p>
-             </div>
-          </Card>
-          <Card className="bg-accent/5 border-accent/20 px-6 py-3 flex items-center gap-4">
-             <div className="p-2 bg-accent/20 rounded-lg">
-                <AlertTriangle className="h-5 w-5 text-accent" />
-             </div>
-             <div>
-                <p className="text-[10px] font-black uppercase text-muted-foreground">High Risk Nodes</p>
-                <p className="text-xl font-black text-accent">{highRiskCount}</p>
-             </div>
-          </Card>
+        
+        <div className="flex items-center gap-3">
+          <Filter className="h-4 w-4 text-muted-foreground" />
+          <Select value={selectedWard} onValueChange={setSelectedWard}>
+            <SelectTrigger className="w-40 bg-background/50 border-primary/20">
+              <SelectValue placeholder="Filter by Ward" />
+            </SelectTrigger>
+            <SelectContent>
+              {WARDS.map(ward => (
+                <SelectItem key={ward} value={ward}>{ward}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <Card className="bg-primary/5 border-primary/20 px-6 py-4 flex items-center gap-4">
+           <div className="p-3 bg-primary/20 rounded-lg">
+              <Shield className="h-6 w-6 text-primary" />
+           </div>
+           <div>
+              <p className="text-[10px] font-black uppercase text-muted-foreground">Assessments ({selectedWard})</p>
+              <p className="text-3xl font-black text-foreground">{stats.total}</p>
+           </div>
+        </Card>
+        
+        {['High', 'Medium', 'Low'].map((level) => (
+          <Card key={level} className={cn(
+            "border-l-4 px-6 py-4 flex items-center gap-4",
+            level === 'High' ? "bg-accent/5 border-l-accent" : 
+            level === 'Medium' ? "bg-primary/5 border-l-primary" : 
+            "bg-muted/5 border-l-muted-foreground"
+          )}>
+            <div>
+              <p className="text-[10px] font-black uppercase text-muted-foreground">{level} Risk Nodes</p>
+              <p className={cn(
+                "text-2xl font-black",
+                level === 'High' ? "text-accent" : level === 'Medium' ? "text-primary" : "text-foreground"
+              )}>
+                {stats.levels[level as keyof typeof stats.levels]}
+              </p>
+            </div>
+          </Card>
+        ))}
       </div>
 
       <Tabs defaultValue="repository" onValueChange={setActiveTab} className="w-full">
@@ -261,32 +323,49 @@ export default function AssessmentManagementPage() {
 
         <TabsContent value="repository" className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-             {/* Analysis Sidebar */}
-             <Card className="md:col-span-1 cyber-border border-primary/10 bg-background/40 p-4 space-y-6">
-                <h3 className="text-xs font-black uppercase text-primary tracking-widest flex items-center gap-2">
-                  <BarChart3 className="h-4 w-4" /> Performance KPIs
-                </h3>
-                
-                <div className="space-y-4">
-                   <div className="space-y-2">
-                      <div className="flex justify-between text-[10px] uppercase font-bold">
-                        <span className="text-muted-foreground">Verification Rate</span>
-                        <span>{Math.round(((assessments.length - pendingCount) / assessments.length) * 100)}%</span>
-                      </div>
-                      <div className="h-1 w-full bg-muted rounded-full overflow-hidden">
-                        <div className="h-full bg-primary" style={{ width: '65%' }} />
-                      </div>
-                   </div>
+             {/* Enhanced KPI Sidebar */}
+             <Card className="md:col-span-1 cyber-border border-primary/10 bg-background/40 p-4 space-y-8">
+                <div>
+                  <h3 className="text-xs font-black uppercase text-primary tracking-widest flex items-center gap-2 mb-4">
+                    <BarChart3 className="h-4 w-4" /> Risk Factors Prevalence
+                  </h3>
+                  <div className="space-y-4">
+                    {RISK_FACTORS.map((factor) => {
+                      const count = stats.factorCounts[factor];
+                      const percentage = stats.total > 0 ? Math.round((count / stats.total) * 100) : 0;
+                      return (
+                        <div key={factor} className="space-y-1">
+                          <div className="flex justify-between text-[9px] font-bold uppercase">
+                            <span className="text-muted-foreground truncate max-w-[140px]">{factor}</span>
+                            <span className="text-primary">{percentage}%</span>
+                          </div>
+                          <Progress value={percentage} className="h-1 bg-muted" />
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
 
-                   <div className="pt-4 border-t border-primary/10 space-y-3">
-                      <p className="text-[10px] font-black uppercase text-muted-foreground">Health Status</p>
-                      <div className="flex items-center gap-2 text-xs font-bold text-primary">
-                        <CheckCircle2 className="h-3 w-3" /> Coverage optimized for Wards 3/4
-                      </div>
-                      <div className="flex items-center gap-2 text-xs font-bold text-accent">
-                        <Clock className="h-3 w-3" /> Re-assessments due for {pendingCount} nodes
-                      </div>
-                   </div>
+                <div className="pt-6 border-t border-primary/10 space-y-4">
+                  <h3 className="text-xs font-black uppercase text-primary tracking-widest flex items-center gap-2">
+                    <Activity className="h-4 w-4" /> Baseline Distribution
+                  </h3>
+                  <div className="space-y-3">
+                    {Object.entries(stats.levels).map(([level, count]) => {
+                      const percentage = stats.total > 0 ? Math.round((count / stats.total) * 100) : 0;
+                      return (
+                        <div key={level} className="flex items-center justify-between">
+                          <Badge variant="outline" className={cn(
+                            "text-[8px] font-black uppercase",
+                            level === 'High' ? "border-accent text-accent" : level === 'Medium' ? "border-primary text-primary" : "border-muted-foreground text-muted-foreground"
+                          )}>
+                            {level}
+                          </Badge>
+                          <span className="text-xs font-bold">{count} ({percentage}%)</span>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
              </Card>
 
@@ -295,7 +374,7 @@ export default function AssessmentManagementPage() {
                 <CardHeader className="flex flex-row items-center justify-between">
                    <div>
                      <CardTitle className="text-xl font-bold italic">Tool Ledger</CardTitle>
-                     <CardDescription>Confidential records captured via this tool</CardDescription>
+                     <CardDescription>Records for {selectedWard} ({filteredAssessments.length} nodes)</CardDescription>
                    </div>
                    <div className="relative w-64">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -307,15 +386,17 @@ export default function AssessmentManagementPage() {
                     <TableHeader className="bg-muted/30">
                       <TableRow>
                         <TableHead className="pl-6 text-[10px] font-black uppercase">Unique ID</TableHead>
-                        <TableHead className="text-[10px] font-black uppercase">Result/Level</TableHead>
+                        <TableHead className="text-[10px] font-black uppercase">Ward</TableHead>
+                        <TableHead className="text-[10px] font-black uppercase">Baseline Level</TableHead>
                         <TableHead className="text-[10px] font-black uppercase">Timestamp</TableHead>
                         <TableHead className="text-[10px] font-black uppercase text-right pr-6">Status</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {assessments.map((record) => (
+                      {filteredAssessments.map((record) => (
                         <TableRow key={record.id} className="hover:bg-primary/5 transition-colors border-primary/5">
                           <TableCell className="pl-6 font-bold">{record.uin}</TableCell>
+                          <TableCell className="text-xs">{record.ward}</TableCell>
                           <TableCell>
                             <Badge className={cn(
                               "font-black uppercase text-[10px] px-2 py-0.5",
