@@ -10,7 +10,11 @@ import {
   ClipboardCheck, 
   Target, 
   RefreshCw, 
-  LogOut
+  LogOut,
+  LayoutDashboard,
+  Package,
+  Home,
+  UserCheck
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -18,13 +22,24 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 export function Navigation() {
   const pathname = usePathname();
 
-  const navItems = [
+  // Determine which navigation set to show based on the current context
+  const isSupervisorRoute = pathname.startsWith('/dashboard') || pathname.startsWith('/inventory');
+
+  const fieldItems = [
     { name: 'Social Map', href: '/hotspots', icon: Map },
     { name: 'Diary', href: '/field/diary', icon: BookOpen },
     { name: 'Assess', href: '/assessment', icon: ClipboardCheck },
     { name: 'Profile', href: '/field/profiling', icon: Target },
     { name: 'Sync', href: '/sync', icon: RefreshCw },
   ];
+
+  const supervisorItems = [
+    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+    { name: 'Inventory', href: '/inventory', icon: Package },
+  ];
+
+  const navItems = isSupervisorRoute ? supervisorItems : fieldItems;
+  const contextTitle = isSupervisorRoute ? "Supervisor Hub" : "Field Intel";
 
   return (
     <nav className={cn(
@@ -34,15 +49,34 @@ export function Navigation() {
     )}>
       
       {/* Brand - Desktop Only */}
-      <div className="hidden md:flex items-center gap-3 px-2 mb-10">
-        <div className="bg-primary/20 p-2 rounded-full border border-primary/40">
-          <Shield className="h-6 w-6 text-primary" />
-        </div>
-        <span className="text-xl font-bold tracking-tight text-foreground glow-cyan">Sentinel</span>
+      <div className="hidden md:flex flex-col gap-1 mb-10 px-2">
+        <Link href="/" className="flex items-center gap-3">
+          <div className="bg-primary/20 p-2 rounded-full border border-primary/40">
+            <Shield className="h-6 w-6 text-primary" />
+          </div>
+          <span className="text-xl font-bold tracking-tight text-foreground glow-cyan">Sentinel</span>
+        </Link>
+        <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest pl-11">
+          {contextTitle}
+        </p>
       </div>
+
+      {/* Home link for mobile */}
+      <Link href="/" className="md:hidden p-2 text-muted-foreground hover:text-primary">
+        <Home className="h-5 w-5" />
+      </Link>
 
       {/* Nav Items */}
       <div className="flex flex-row md:flex-col items-center md:items-stretch gap-1 md:gap-2 w-full">
+        {/* Switch Role Toggle - Desktop Only */}
+        <Link 
+          href={isSupervisorRoute ? "/field" : "/dashboard"}
+          className="hidden md:flex items-center gap-2 px-4 py-2 mb-4 text-[10px] font-black uppercase tracking-tighter text-muted-foreground hover:text-primary transition-colors border border-dashed border-border rounded-lg"
+        >
+          <UserCheck className="h-4 w-4" />
+          Switch to {isSupervisorRoute ? "Field Kit" : "Supervisor"}
+        </Link>
+
         {navItems.map((item) => {
           const isActive = pathname === item.href;
           return (
