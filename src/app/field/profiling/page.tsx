@@ -30,7 +30,8 @@ import {
   BrainCircuit, 
   Loader2,
   CheckCircle2,
-  XCircle
+  XCircle,
+  Shield
 } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
@@ -47,6 +48,12 @@ const KP_GROUPS = [
 ];
 
 const TYPOLOGIES = ["Shebeen", "Home-based", "Brothel", "Hotel", "Parlour", "Social Media", "Street-based", "Truck stop", "Lodge", "Bar"];
+
+// Mock profile for the logged-in Peer Educator
+const PE_PROFILE = {
+  name: "Anonymous PE",
+  assignedWard: "Ward 3",
+};
 
 export default function SpotProfilingPage() {
   const [isNew, setIsNew] = useState("New");
@@ -171,19 +178,29 @@ export default function SpotProfilingPage() {
                 <CardTitle className="text-xl font-black italic flex items-center gap-2">
                   <Target className="h-5 w-5 text-primary" /> 1. Identification Matrix
                 </CardTitle>
-                <RadioGroup value={isNew} onValueChange={setIsNew} className="flex gap-4">
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="New" id="new" />
-                    <Label htmlFor="new" className="text-xs font-bold uppercase">New Site</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="Existing" id="old" />
-                    <Label htmlFor="old" className="text-xs font-bold uppercase">Existing</Label>
-                  </div>
-                </RadioGroup>
+                <div className="flex items-center gap-6">
+                  <Badge variant="outline" className="bg-primary/10 border-primary/30 text-primary flex items-center gap-2 py-1.5 px-3">
+                    <Shield className="h-3 w-3" />
+                    Assigned: {PE_PROFILE.assignedWard}
+                  </Badge>
+                  <RadioGroup value={isNew} onValueChange={setIsNew} className="flex gap-4">
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="New" id="new" />
+                      <Label htmlFor="new" className="text-xs font-bold uppercase">New Site</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="Existing" id="old" />
+                      <Label htmlFor="old" className="text-xs font-bold uppercase">Existing</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
               </div>
             </CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6">
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase text-muted-foreground">Assigned Ward (Automatic)</Label>
+                <Input value={PE_PROFILE.assignedWard} readOnly className="bg-primary/5 border-primary/20 text-primary font-black uppercase italic" />
+              </div>
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase text-muted-foreground">Site Name *</Label>
                 <Input id="siteName" placeholder="Ward HQ / Primary Site" className="bg-muted/20" />
