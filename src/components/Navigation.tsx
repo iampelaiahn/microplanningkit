@@ -1,4 +1,3 @@
-
 "use client"
 
 import Link from 'next/link'
@@ -30,10 +29,10 @@ export function Navigation() {
   const [role, setRole] = useState<'PE' | 'CHM'>('CHM');
 
   useEffect(() => {
-    const peRoutes = ['/field', '/sync', '/hotspots'];
-    const isPE = (peRoutes.some(r => pathname.startsWith(r)) && !pathname.startsWith('/hotspots/supervisor')) || pathname === '/field';
+    const peRoutes = ['/field', '/sync'];
+    const isPE = peRoutes.some(r => pathname.startsWith(r)) || pathname === '/field';
     
-    const chmRoutes = ['/dashboard', '/inventory', '/assessment', '/monitoring', '/hotspots/supervisor'];
+    const chmRoutes = ['/dashboard', '/inventory', '/assessment', '/monitoring'];
     const isCHM = chmRoutes.some(r => pathname.startsWith(r));
 
     if (isCHM) {
@@ -46,13 +45,12 @@ export function Navigation() {
   const chmItems = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Field tracker', href: '/monitoring', icon: Activity },
-    { name: 'Hotspots', href: '/hotspots/supervisor', icon: Map },
     { name: 'Assessment repo', href: '/assessment', icon: ShieldCheck },
     { name: 'Inventory', href: '/inventory', icon: Package },
   ];
 
   const peItems = [
-    { name: 'Social Map', href: '/hotspots', icon: Network },
+    { name: 'Social Map', href: '/field/network', icon: Network },
     { name: 'Diary', href: '/field/diary', icon: BookOpen },
     { name: 'Outreach', href: '/field/outreach', icon: CalendarDays },
     { name: 'Assess', href: '/field/assess', icon: Shield },
