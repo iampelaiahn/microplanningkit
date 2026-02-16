@@ -5,9 +5,10 @@ import React, { useState } from 'react'
 import { StockCircularProgress } from '@/components/StockCircularProgress'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Box, Upload, MapPin, AlertCircle, FileSpreadsheet } from 'lucide-react'
+import { Box, Upload, MapPin, AlertCircle, FileSpreadsheet, Package } from 'lucide-react'
 import { INITIAL_STOCK } from '@/lib/store'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Badge } from '@/components/ui/badge'
 
 export default function Dashboard() {
   const [stock, setStock] = useState(INITIAL_STOCK);
@@ -15,7 +16,6 @@ export default function Dashboard() {
 
   const totalStockInHand = stock.reduce((acc, item) => acc + item.currentStock, 0);
   const totalStockReceived = stock.reduce((acc, item) => acc + item.totalReceived, 0);
-  const maxStockCapacity = 20000;
 
   const handleExcelUpload = () => {
     setIsUploading(true);
@@ -40,7 +40,7 @@ export default function Dashboard() {
           </Button>
           <Button className="gap-2 bg-primary">
             <Box className="h-4 w-4" />
-            Stock Entry Modal
+            Stock Entry
           </Button>
         </div>
       </div>
@@ -52,25 +52,33 @@ export default function Dashboard() {
             <CardDescription>Total In-Hand vs Received Capacity</CardDescription>
           </CardHeader>
           <CardContent className="flex justify-center">
-            <StockCircularProgress value={totalStockInHand} max={totalStockReceived} label="Stock in Hand" />
+            <StockCircularProgress value={totalStockInHand} max={totalStockReceived} label="Total Stock in Hand" />
           </CardContent>
         </Card>
 
-        <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {stock.map((item) => (
-            <Card key={item.id} className="border-l-4 border-l-primary">
-              <CardContent className="pt-6 flex justify-between items-center">
-                <div>
-                  <p className="text-[10px] font-bold uppercase text-muted-foreground">{item.facility}</p>
-                  <h3 className="text-lg font-bold">{item.name} ({item.ward})</h3>
-                </div>
-                <div className="text-right">
-                  <p className="text-2xl font-black text-primary">{item.currentStock}</p>
-                  <p className="text-xs text-muted-foreground">In Hand</p>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+        <div className="md:col-span-2 space-y-4">
+          <div className="flex items-center justify-between px-2">
+             <h2 className="text-sm font-black uppercase text-muted-foreground tracking-widest flex items-center gap-2">
+               <Package className="h-4 w-4" /> Key Resource Units
+             </h2>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {stock.slice(0, 4).map((item) => (
+              <Card key={item.id} className="border-l-4 border-l-primary hover:shadow-md transition-shadow">
+                <CardContent className="pt-6 flex justify-between items-center">
+                  <div>
+                    <p className="text-[10px] font-black uppercase text-muted-foreground tracking-tighter">{item.facility}</p>
+                    <h3 className="text-lg font-bold truncate max-w-[120px]">{item.name}</h3>
+                    <Badge variant="outline" className="text-[9px] mt-1">{item.ward}</Badge>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-3xl font-black text-primary">{item.currentStock.toLocaleString()}</p>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase">In Hand</p>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
       </div>
 
