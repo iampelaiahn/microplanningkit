@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useState, useMemo } from 'react'
@@ -30,7 +29,8 @@ import {
   XCircle,
   Building2,
   Users,
-  MapPin
+  MapPin,
+  X
 } from 'lucide-react'
 import { generateRiskAssessmentSummary } from '@/ai/flows/generate-risk-assessment-summary'
 import { toast } from '@/hooks/use-toast'
@@ -110,53 +110,63 @@ export default function AssessmentManagementPage() {
   const stats = useMemo(() => {
     if (isHotspotTool) {
       const records = hotspotProfiles || [];
-      const filtered = selectedWard === "All" ? records : records.filter(h => h.ward === selectedWard);
+      const filteredByWard = selectedWard === "All" ? records : records.filter(h => h.ward === selectedWard);
       
-      const totalPop = filtered.reduce((acc, h) => {
+      const totalPop = filteredByWard.reduce((acc, h) => {
         const pData = h.populationData || {};
         return acc + Object.values(pData).reduce((pAcc: number, pCur: any) => pAcc + (pCur.total || 0), 0);
       }, 0);
 
-      const highVolume = filtered.filter(h => {
+      const highVolume = filteredByWard.filter(h => {
          const pData = h.populationData || {};
          const total = Object.values(pData).reduce((pAcc: number, pCur: any) => pAcc + (pCur.total || 0), 0);
          return total > 50;
       }).length;
 
-      const criticalGaps = filtered.filter(h => (h.services?.condoms === false || h.services?.lube === false)).length;
+      const criticalGaps = filteredByWard.filter(h => (h.services?.condoms === false || h.services?.lube === false)).length;
       
       const typeCounts: Record<string, number> = {};
       TYPOLOGIES.forEach(t => typeCounts[t] = 0);
-      filtered.forEach(h => {
+      filteredByWard.forEach(h => {
         h.typology?.forEach((t: string) => {
           if (typeCounts[t] !== undefined) typeCounts[t]++;
         });
       });
 
-      return { total: filtered.length, highVolume, criticalGaps, typeCounts, totalPop };
+      // Filtered records for the table
+      const filteredRecords = activeFactorFilter 
+        ? filteredByWard.filter(h => h.typology?.includes(activeFactorFilter))
+        : filteredByWard;
+
+      return { total: filteredByWard.length, highVolume, criticalGaps, typeCounts, totalPop, filteredRecords };
     } else {
       const records = visits || [];
-      let filtered = records;
-      if (selectedWard !== "All") filtered = filtered.filter(a => a.ward === selectedWard);
+      let filteredByWard = records;
+      if (selectedWard !== "All") filteredByWard = filteredByWard.filter(a => a.ward === selectedWard);
       
-      const total = filtered.length;
+      const total = filteredByWard.length;
       const levels = {
-        High: filtered.filter(a => a.riskLevel === 'High').length,
-        Medium: filtered.filter(a => a.riskLevel === 'Medium').length,
-        Low: filtered.filter(a => a.riskLevel === 'Low').length,
+        High: filteredByWard.filter(a => a.riskLevel === 'High').length,
+        Medium: filteredByWard.filter(a => a.riskLevel === 'Medium').length,
+        Low: filteredByWard.filter(a => a.riskLevel === 'Low').length,
       };
 
       const factorCounts: Record<string, number> = {};
       RISK_FACTORS.forEach(f => factorCounts[f] = 0);
-      filtered.forEach(a => {
+      filteredByWard.forEach(a => {
         a.topicsDiscussed?.forEach((f: string) => {
           if (factorCounts[f] !== undefined) factorCounts[f]++;
         });
       });
 
-      return { total, levels, factorCounts };
+      // Filtered records for the table
+      const filteredRecords = activeFactorFilter
+        ? filteredByWard.filter(a => a.topicsDiscussed?.includes(activeFactorFilter))
+        : filteredByWard;
+
+      return { total, levels, factorCounts, filteredRecords };
     }
-  }, [isHotspotTool, selectedWard, hotspotProfiles, visits]);
+  }, [isHotspotTool, selectedWard, activeFactorFilter, hotspotProfiles, visits]);
 
   const handleAssessment = async () => {
     if (!uin) {
@@ -181,6 +191,7 @@ export default function AssessmentManagementPage() {
   const openTool = (id: string) => {
     setSelectedToolId(id);
     setView('detail');
+    setActiveFactorFilter(null);
   };
 
   if (view === 'library') {
@@ -262,7 +273,7 @@ export default function AssessmentManagementPage() {
         
         <div className="flex items-center gap-3">
           <Filter className="h-4 w-4 text-muted-foreground" />
-          <Select value={selectedWard} onValueChange={setSelectedWard}>
+          <Select value={selectedWard} onValueChange={(v) => { setSelectedWard(v); setActiveFactorFilter(null); }}>
             <SelectTrigger className="w-40 bg-background/50 border-primary/20">
               <SelectValue placeholder="Filter by Ward" />
             </SelectTrigger>
@@ -337,20 +348,48 @@ export default function AssessmentManagementPage() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
              <Card className="md:col-span-1 cyber-border border-primary/10 bg-background/40 p-4 space-y-8">
                 <div>
-                  <h3 className="text-xs font-black uppercase text-primary tracking-widest flex items-center gap-2 mb-4">
-                    <BarChart3 className="h-4 w-4" /> {isHotspotTool ? 'Typology Prevalence' : 'Risk Factors Prevalence'}
-                  </h3>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-xs font-black uppercase text-primary tracking-widest flex items-center gap-2">
+                      <BarChart3 className="h-4 w-4" /> {isHotspotTool ? 'Typology Prevalence' : 'Risk Factors Prevalence'}
+                    </h3>
+                    {activeFactorFilter && (
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-6 w-6 text-muted-foreground hover:text-primary"
+                        onClick={() => setActiveFactorFilter(null)}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </div>
                   <div className="space-y-3">
-                    {(isHotspotTool ? TYPOLOGIES.slice(0, 6) : RISK_FACTORS).map((factor) => {
+                    {(isHotspotTool ? TYPOLOGIES : RISK_FACTORS).map((factor) => {
                       const count = (stats as any)[isHotspotTool ? 'typeCounts' : 'factorCounts'][factor] || 0;
                       const percentage = stats.total > 0 ? Math.round((count / stats.total) * 100) : 0;
+                      const isActive = activeFactorFilter === factor;
+                      
                       return (
-                        <div key={factor} className="space-y-1">
+                        <div 
+                          key={factor} 
+                          className={cn(
+                            "space-y-1 cursor-pointer transition-all duration-300 p-1.5 rounded-md",
+                            isActive ? "bg-primary/10 border-l-2 border-primary" : "hover:bg-primary/5"
+                          )}
+                          onClick={() => setActiveFactorFilter(isActive ? null : factor)}
+                        >
                           <div className="flex justify-between text-[9px] font-bold uppercase">
-                            <span className="truncate max-w-[140px] text-muted-foreground">{factor}</span>
-                            <span className="text-primary">{percentage}%</span>
+                            <span className={cn(
+                              "truncate max-w-[140px]",
+                              isActive ? "text-primary" : "text-muted-foreground"
+                            )}>
+                              {factor}
+                            </span>
+                            <span className={isActive ? "text-primary" : "text-muted-foreground"}>
+                              {percentage}%
+                            </span>
                           </div>
-                          <Progress value={percentage} className="h-1 bg-muted/30" />
+                          <Progress value={percentage} className={cn("h-1 bg-muted/30", isActive && "bg-primary/30")} />
                         </div>
                       )
                     })}
@@ -380,7 +419,11 @@ export default function AssessmentManagementPage() {
                 <CardHeader className="flex flex-row items-center justify-between">
                    <div>
                      <CardTitle className="text-xl font-bold italic">{isHotspotTool ? 'Hotspot Profile Ledger' : 'Client Risk Ledger'}</CardTitle>
-                     <CardDescription>Records for {selectedWard} ({stats.total} entries)</CardDescription>
+                     <CardDescription>
+                        Records for {selectedWard} 
+                        {activeFactorFilter && ` • ${activeFactorFilter}`}
+                        ({stats.filteredRecords.length} entries)
+                     </CardDescription>
                    </div>
                    <div className="relative w-64">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -399,12 +442,12 @@ export default function AssessmentManagementPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {isHotspotTool ? (
-                        (hotspotProfiles || []).filter(h => selectedWard === "All" || h.ward === selectedWard).map((record) => {
+                      {stats.filteredRecords.map((record: any) => {
+                        if (isHotspotTool) {
                           const pData = record.populationData || {};
                           const total = Object.values(pData).reduce((acc: number, cur: any) => acc + (cur.total || 0), 0);
                           return (
-                            <TableRow key={record.id} className="hover:bg-primary/5 border-primary/5">
+                            <TableRow key={record.id} className="hover:bg-primary/5 border-primary/5 transition-colors">
                               <TableCell className="pl-6 font-bold">{record.hotspotName}</TableCell>
                               <TableCell className="text-xs">{record.ward}</TableCell>
                               <TableCell><Badge variant="outline" className="text-[10px] uppercase">{record.typology?.[0] || 'Unknown'}</Badge></TableCell>
@@ -416,28 +459,35 @@ export default function AssessmentManagementPage() {
                               </TableCell>
                             </TableRow>
                           );
-                        })
-                      ) : (
-                        (visits || []).filter(a => selectedWard === "All" || a.ward === selectedWard).map((record) => (
-                          <TableRow key={record.id} className="hover:bg-primary/5 border-primary/5">
-                            <TableCell className="pl-6 font-bold">{record.uin}</TableCell>
-                            <TableCell className="text-xs">{record.ward || 'Ward 3'}</TableCell>
-                            <TableCell>
-                              <Badge className={cn(
-                                "font-black uppercase text-[10px]",
-                                record.riskLevel === 'High' ? "bg-accent/20 text-accent border-accent/40" : 
-                                record.riskLevel === 'Medium' ? "bg-primary/20 text-primary border-primary/40" :
-                                "bg-muted text-muted-foreground"
-                              )}>{record.riskLevel}</Badge>
-                            </TableCell>
-                            <TableCell className="text-xs text-muted-foreground">{new Date(record.timestamp).toLocaleDateString()}</TableCell>
-                            <TableCell className="text-right pr-6">
-                               <div className="flex items-center justify-end gap-2 text-[10px] font-bold">
-                                  {record.riskLevel === 'High' ? <span className="text-accent flex items-center gap-1"><AlertTriangle className="h-3 w-3" /> Critical</span> : <span className="text-primary flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> Standard</span>}
-                               </div>
-                            </TableCell>
-                          </TableRow>
-                        ))
+                        } else {
+                          return (
+                            <TableRow key={record.id} className="hover:bg-primary/5 border-primary/5 transition-colors">
+                              <TableCell className="pl-6 font-bold">{record.uin}</TableCell>
+                              <TableCell className="text-xs">{record.ward || 'Ward 3'}</TableCell>
+                              <TableCell>
+                                <Badge className={cn(
+                                  "font-black uppercase text-[10px]",
+                                  record.riskLevel === 'High' ? "bg-accent/20 text-accent border-accent/40" : 
+                                  record.riskLevel === 'Medium' ? "bg-primary/20 text-primary border-primary/40" :
+                                  "bg-muted text-muted-foreground"
+                                )}>{record.riskLevel}</Badge>
+                              </TableCell>
+                              <TableCell className="text-xs text-muted-foreground">{new Date(record.timestamp).toLocaleDateString()}</TableCell>
+                              <TableCell className="text-right pr-6">
+                                 <div className="flex items-center justify-end gap-2 text-[10px] font-bold">
+                                    {record.riskLevel === 'High' ? <span className="text-accent flex items-center gap-1"><AlertTriangle className="h-3 w-3" /> Critical</span> : <span className="text-primary flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> Standard</span>}
+                                 </div>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        }
+                      })}
+                      {stats.filteredRecords.length === 0 && (
+                        <TableRow>
+                          <TableCell colSpan={5} className="py-12 text-center text-muted-foreground italic">
+                            No records matching the current filters.
+                          </TableCell>
+                        </TableRow>
                       )}
                     </TableBody>
                   </Table>
