@@ -122,8 +122,13 @@ export default function AssessmentManagementPage() {
       });
     });
 
-    return { total, levels, factorCounts };
-  }, [filteredAssessments]);
+    const wardCounts: Record<string, number> = {};
+    WARDS.filter(w => w !== "All").forEach(w => {
+      wardCounts[w] = assessments.filter(a => a.ward === w).length;
+    });
+
+    return { total, levels, factorCounts, wardCounts };
+  }, [filteredAssessments, assessments]);
 
   const toggleFactor = (factor: string) => {
     setSelectedFactors(prev => 
@@ -285,9 +290,16 @@ export default function AssessmentManagementPage() {
            <div className="p-3 bg-primary/20 rounded-lg">
               <Shield className="h-6 w-6 text-primary" />
            </div>
-           <div>
+           <div className="flex-1">
               <p className="text-[10px] font-black uppercase text-muted-foreground">Assessments ({selectedWard})</p>
               <p className="text-3xl font-black text-foreground">{stats.total}</p>
+              <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1 opacity-50">
+                {Object.entries(stats.wardCounts).map(([ward, count]) => (
+                  <span key={ward} className="text-[8px] font-bold uppercase whitespace-nowrap">
+                    {ward} &gt; {count}
+                  </span>
+                ))}
+              </div>
            </div>
         </Card>
         
