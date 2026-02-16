@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useState, useMemo } from 'react'
@@ -328,7 +327,7 @@ export default function OutreachTrackingPage() {
             <CardHeader className="border-b border-primary/10">
               <CardTitle className="text-lg font-black italic text-primary flex items-center gap-2">
                 <BrainCircuit className="h-5 w-5" /> AI Recommendation
-              </BrainCircuit>
+              </CardTitle>
             </CardHeader>
             <CardContent className="pt-6">
               {!aiResult ? (
