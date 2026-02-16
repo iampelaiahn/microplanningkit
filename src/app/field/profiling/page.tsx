@@ -1,11 +1,10 @@
 "use client"
 
-import React, { useState, useMemo, useEffect } from 'react'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card'
+import React, { useState, useMemo } from 'react'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
-import { Textarea } from '@/components/ui/textarea'
 import { Checkbox } from '@/components/ui/checkbox'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { 
@@ -16,7 +15,6 @@ import {
   SelectValue 
 } from '@/components/ui/select'
 import { 
-  PlusCircle, 
   Target, 
   Crosshair, 
   Save, 
@@ -25,13 +23,12 @@ import {
   ShieldAlert, 
   Activity, 
   Users, 
-  Clock, 
   MapPin, 
   BrainCircuit, 
   Loader2,
   CheckCircle2,
-  XCircle,
-  Shield
+  Shield,
+  AlertCircle
 } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
@@ -47,37 +44,43 @@ const KP_GROUPS = [
   { id: 'hrm', label: 'High Risk Men (HRM)', thresholds: { high: 40, med: 20 } },
 ];
 
-const TYPOLOGIES = ["Shebeen", "Home-based", "Brothel", "Hotel", "Parlour", "Social Media", "Street-based", "Truck stop", "Lodge", "Bar"];
+const TYPOLOGIES = ["Shebeen", "Home-based", "Brothel", "Hotel", "Parlour", "Social Media", "Street-based", "Truck stop", "Lodge", "Bar", "Other"];
 
-// Mock profile for the logged-in Peer Educator
 const PE_PROFILE = {
   name: "Anonymous PE",
   assignedWard: "Ward 3",
 };
 
 export default function SpotProfilingPage() {
+  // Identification State
   const [isNew, setIsNew] = useState("New");
+  const [siteName, setSiteName] = useState("");
+  const [hotspotName, setHotspotName] = useState("");
+  const [area, setArea] = useState("");
+  const [cluster, setCluster] = useState("");
+  const [profilingDate, setProfilingDate] = useState("");
+  const [microplanner, setMicroplanner] = useState("");
   const [coords, setCoords] = useState({ lat: '', lng: '' });
+  
+  // Typology State
   const [typology, setTypology] = useState<string[]>([]);
-  const [otherTypology, setOtherTypology] = useState("");
   const [socialPlatform, setSocialPlatform] = useState("");
+  const [otherTypology, setOtherTypology] = useState("");
   
   // Population State
-  const [popData, setPopData] = useState<Record<string, { a1: number, a2: number, a3: number, total: number }>>(() => {
+  const [popData, setPopData] = useState<Record<string, { a1: number, a2: number, a3: number }>>(() => {
     const init: any = {};
-    KP_GROUPS.forEach(kp => init[kp.id] = { a1: 0, a2: 0, a3: 0, total: 0 });
+    KP_GROUPS.forEach(kp => init[kp.id] = { a1: 0, a2: 0, a3: 0 });
     return init;
   });
 
-  // Services State
+  // Services & Structural State
   const [services, setServices] = useState({
     condoms: true,
     lube: true,
     clinicDistance: 2,
     kpFriendly: true
   });
-
-  // Structural State
   const [structural, setStructural] = useState({
     police: "No",
     violence: "Low",
@@ -96,7 +99,6 @@ export default function SpotProfilingPage() {
       let volume = 'Low';
       if (sum > kp.thresholds.high) volume = 'High';
       else if (sum >= kp.thresholds.med) volume = 'Medium';
-      
       results[id] = { total: sum, volume };
     });
     return results;
@@ -108,7 +110,6 @@ export default function SpotProfilingPage() {
     if (!services.lube) flags.push("PROGRAM GAP: Lubricants Inaccessible");
     if (services.clinicDistance > 5) flags.push("ACCESS RISK: Distance > 5km");
     if (!services.kpFriendly) flags.push("SERVICE QUALITY RISK: Not KP Friendly");
-    
     if (structural.police === "Yes" || structural.violence === "High" || structural.stigma === "High") {
       flags.push("HIGH STRUCTURAL RISK: High Violence/Stigma/Harassment");
     }
@@ -116,11 +117,29 @@ export default function SpotProfilingPage() {
   }, [services, structural]);
 
   const handlePopChange = (kpId: string, ageKey: string, val: string) => {
-    const num = parseInt(val) || 0;
+    const num = Math.max(0, parseInt(val) || 0);
     setPopData(prev => ({
       ...prev,
       [kpId]: { ...prev[kpId], [ageKey]: num }
     }));
+  };
+
+  const validateForm = () => {
+    const errors = [];
+    if (!siteName) errors.push("Site Name is mandatory");
+    if (!hotspotName) errors.push("Hotspot Name is mandatory");
+    if (!area) errors.push("Hotspot Area is mandatory");
+    if (!cluster) errors.push("Cluster is mandatory");
+    if (!profilingDate) errors.push("Date of Profiling is mandatory");
+    if (!microplanner) errors.push("Microplanner name is mandatory");
+    if (typology.length === 0) errors.push("At least one typology must be selected");
+    if (typology.includes("Social Media") && !socialPlatform) errors.push("Social platform name is required");
+    if (typology.includes("Other") && !otherTypology) errors.push("Other typology description is required");
+    
+    const totalPop = Object.values(totalsByKP).reduce((acc: number, cur: any) => acc + cur.total, 0);
+    if (totalPop === 0) errors.push("At least one population estimate is required for profiling");
+
+    return errors;
   };
 
   const handleCaptureGPS = () => {
@@ -131,22 +150,51 @@ export default function SpotProfilingPage() {
   };
 
   const handleGenerateAI = async () => {
+    const errors = validateForm();
+    if (errors.length > 0) {
+      toast({ 
+        title: "Incomplete Data", 
+        description: `Please fill all required fields: ${errors[0]}`, 
+        variant: "destructive" 
+      });
+      return;
+    }
+
     setAiLoading(true);
     try {
       const result = await generateHotspotRecommendation({
-        hotspotName: (document.getElementById('hotspotName') as HTMLInputElement)?.value || 'Unnamed Site',
+        hotspotName,
         typology,
         totalEstimatedPopulation: Object.values(totalsByKP).reduce((acc: number, cur: any) => acc + cur.total, 0),
         riskFlags,
-        barriers: (document.getElementById('barriers') as HTMLTextAreaElement)?.value || 'None noted',
+        barriers: "Analysis based on structural and service gap inputs.",
         serviceGaps: riskFlags.filter(f => f.includes('GAP'))
       });
       setAiResult(result);
+      toast({ title: "Intelligence Generated", description: "Programmatic insights ready." });
     } catch (e) {
       toast({ title: "AI Generation Failed", variant: "destructive" });
     } finally {
       setAiLoading(false);
     }
+  };
+
+  const handleCommit = () => {
+    const errors = validateForm();
+    if (errors.length > 0) {
+      toast({ 
+        title: "Submission Blocked", 
+        description: errors[0], 
+        variant: "destructive" 
+      });
+      return;
+    }
+
+    toast({ 
+      title: "Profile Committed", 
+      description: `Hotspot ${hotspotName} has been saved to the field ledger.` 
+    });
+    // Here we would typically trigger a redirect or clear the form
   };
 
   return (
@@ -158,12 +206,15 @@ export default function SpotProfilingPage() {
           </h1>
           <p className="text-muted-foreground text-lg italic">Microplanning & High-Fidelity Hotspot Intelligence</p>
         </div>
-        <div className="flex gap-4">
+        <div className="flex flex-wrap gap-4">
           <Button onClick={handleGenerateAI} variant="outline" className="border-primary/40 text-primary gap-2 h-12">
             {aiLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <BrainCircuit className="h-5 w-5" />}
             AI Recommendation
           </Button>
-          <Button className="bg-primary text-background font-black uppercase tracking-widest gap-2 h-12 shadow-[0_0_20px_rgba(0,255,255,0.3)]">
+          <Button 
+            onClick={handleCommit}
+            className="bg-primary text-background font-black uppercase tracking-widest gap-2 h-12 shadow-[0_0_20px_rgba(0,255,255,0.3)]"
+          >
             <Save className="h-5 w-5" /> Commit Profile
           </Button>
         </div>
@@ -203,23 +254,56 @@ export default function SpotProfilingPage() {
               </div>
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase text-muted-foreground">Site Name *</Label>
-                <Input id="siteName" placeholder="Ward HQ / Primary Site" className="bg-muted/20" />
+                <Input 
+                  value={siteName} 
+                  onChange={(e) => setSiteName(e.target.value)} 
+                  placeholder="Ward HQ / Primary Site" 
+                  className={cn("bg-muted/20", !siteName && "border-destructive/20")} 
+                />
               </div>
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase text-muted-foreground">Hotspot Name *</Label>
-                <Input id="hotspotName" placeholder="e.g. Mbare Musika" className="bg-muted/20" />
+                <Input 
+                  value={hotspotName} 
+                  onChange={(e) => setHotspotName(e.target.value)} 
+                  placeholder="e.g. Mbare Musika" 
+                  className={cn("bg-muted/20", !hotspotName && "border-destructive/20")} 
+                />
               </div>
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase text-muted-foreground">Hotspot Area / Cluster *</Label>
-                <Input placeholder="Block 3 / Central" className="bg-muted/20" />
+                <div className="flex gap-2">
+                  <Input 
+                    value={area} 
+                    onChange={(e) => setArea(e.target.value)} 
+                    placeholder="Area" 
+                    className={cn("bg-muted/20", !area && "border-destructive/20")} 
+                  />
+                  <Input 
+                    value={cluster} 
+                    onChange={(e) => setCluster(e.target.value)} 
+                    placeholder="Cluster" 
+                    className={cn("bg-muted/20", !cluster && "border-destructive/20")} 
+                  />
+                </div>
               </div>
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase text-muted-foreground">Date of Profiling *</Label>
-                <Input type="date" className="bg-muted/20" />
+                <Input 
+                  type="date" 
+                  value={profilingDate} 
+                  onChange={(e) => setProfilingDate(e.target.value)} 
+                  className={cn("bg-muted/20", !profilingDate && "border-destructive/20")} 
+                />
               </div>
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase text-muted-foreground">Microplanner / Outreach Worker *</Label>
-                <Input placeholder="Enter Names" className="bg-muted/20" />
+                <Input 
+                  value={microplanner} 
+                  onChange={(e) => setMicroplanner(e.target.value)} 
+                  placeholder="Enter Names" 
+                  className={cn("bg-muted/20", !microplanner && "border-destructive/20")} 
+                />
               </div>
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase text-muted-foreground">GPS Location</Label>
@@ -237,6 +321,7 @@ export default function SpotProfilingPage() {
               <CardTitle className="text-xl font-black italic flex items-center gap-2">
                 <Activity className="h-5 w-5 text-primary" /> 2. Typology Classification
               </CardTitle>
+              <CardDescription className="text-xs uppercase font-bold tracking-tight">Select at least one site typology</CardDescription>
             </CardHeader>
             <CardContent className="pt-6 space-y-6">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -253,16 +338,35 @@ export default function SpotProfilingPage() {
                   </div>
                 ))}
               </div>
-              {typology.includes("Social Media") && (
-                <div className="animate-in slide-in-from-left-2 space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-primary">Platform Name (Required)</Label>
-                  <Input value={socialPlatform} onChange={(e) => setSocialPlatform(e.target.value)} placeholder="e.g. WhatsApp, Facebook" className="bg-primary/5 border-primary/20" />
-                </div>
-              )}
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {typology.includes("Social Media") && (
+                  <div className="animate-in slide-in-from-left-2 space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-primary">Platform Name *</Label>
+                    <Input 
+                      value={socialPlatform} 
+                      onChange={(e) => setSocialPlatform(e.target.value)} 
+                      placeholder="e.g. WhatsApp, Facebook" 
+                      className="bg-primary/5 border-primary/20" 
+                    />
+                  </div>
+                )}
+                {typology.includes("Other") && (
+                  <div className="animate-in slide-in-from-left-2 space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-primary">Specify Other Typology *</Label>
+                    <Input 
+                      value={otherTypology} 
+                      onChange={(e) => setOtherTypology(e.target.value)} 
+                      placeholder="Enter description" 
+                      className="bg-primary/5 border-primary/20" 
+                    />
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
 
-          {/* Section 3: Population & Volume (The Core Logic) */}
+          {/* Section 3: Population & Volume */}
           <Card className="cyber-border bg-background/40">
             <CardHeader className="border-b border-primary/10">
               <CardTitle className="text-xl font-black italic flex items-center gap-2">
@@ -289,15 +393,15 @@ export default function SpotProfilingPage() {
                     <div className="grid grid-cols-3 md:grid-cols-4 gap-4">
                       <div className="space-y-1">
                         <Label className="text-[9px] font-bold uppercase opacity-50">18-24</Label>
-                        <Input type="number" onChange={(e) => handlePopChange(kp.id, 'a1', e.target.value)} className="h-8 bg-background/50" />
+                        <Input type="number" value={popData[kp.id].a1 || ""} onChange={(e) => handlePopChange(kp.id, 'a1', e.target.value)} className="h-8 bg-background/50" />
                       </div>
                       <div className="space-y-1">
                         <Label className="text-[9px] font-bold uppercase opacity-50">25-35</Label>
-                        <Input type="number" onChange={(e) => handlePopChange(kp.id, 'a2', e.target.value)} className="h-8 bg-background/50" />
+                        <Input type="number" value={popData[kp.id].a2 || ""} onChange={(e) => handlePopChange(kp.id, 'a2', e.target.value)} className="h-8 bg-background/50" />
                       </div>
                       <div className="space-y-1">
                         <Label className="text-[9px] font-bold uppercase opacity-50">36+</Label>
-                        <Input type="number" onChange={(e) => handlePopChange(kp.id, 'a3', e.target.value)} className="h-8 bg-background/50" />
+                        <Input type="number" value={popData[kp.id].a3 || ""} onChange={(e) => handlePopChange(kp.id, 'a3', e.target.value)} className="h-8 bg-background/50" />
                       </div>
                       <div className="space-y-1 bg-primary/5 p-1 rounded">
                         <Label className="text-[9px] font-black uppercase text-primary">Total Est.</Label>
