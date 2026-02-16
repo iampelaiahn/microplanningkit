@@ -17,7 +17,9 @@ import {
   ShieldAlert,
   Target,
   Package,
-  ArrowRight
+  ArrowRight,
+  Stethoscope,
+  Activity
 } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
@@ -34,11 +36,27 @@ export default function OutreachTrackingPage() {
   const [visitDate, setVisitDate] = useState("");
   const [uin, setUin] = useState("");
   const [risk, setRisk] = useState<RiskLevel>("Unknown");
-  const [commodities, setCommodities] = useState({ mc: 0, fc: 0, lube: 0 });
-  const [topics, setTopics] = useState<string[]>([]);
   const [registered, setRegistered] = useState(false);
+  const [topics, setTopics] = useState<string[]>([]);
+  
+  // Services & Commodities State
+  const [services, setServices] = useState({
+    mc: 0,
+    fc: 0,
+    lube: 0,
+    hivst: 0,
+    hivstResult: "Pending",
+    pregTest: 0,
+    pregResult: "Pending",
+    padsReusable: 0,
+    padsDisposable: 0
+  });
 
-  const isHighRiskAlert = useMemo(() => risk === 'High' && (commodities.mc + commodities.fc + commodities.lube === 0), [risk, commodities]);
+  const totalCommodities = useMemo(() => 
+    services.mc + services.fc + services.lube + services.hivst + services.pregTest + services.padsReusable + services.padsDisposable,
+  [services]);
+
+  const isHighRiskAlert = useMemo(() => risk === 'High' && (services.mc + services.fc + services.lube === 0), [risk, services]);
 
   const handleSubmit = async () => {
     if (!uin || !visitDate || risk === 'Unknown') {
@@ -52,7 +70,7 @@ export default function OutreachTrackingPage() {
         visitDate,
         riskLevel: risk,
         uin,
-        commoditiesDistributed: commodities.mc + commodities.fc + commodities.lube,
+        commoditiesDistributed: totalCommodities,
         isRegisteredAtClinic: registered
       });
       setAiResult(result);
@@ -115,21 +133,89 @@ export default function OutreachTrackingPage() {
           <Card className="cyber-border bg-background/40">
             <CardHeader className="border-b border-primary/10">
               <CardTitle className="text-xl font-black italic flex items-center gap-2">
-                <Package className="h-5 w-5 text-primary" /> Commodity Distribution
+                <Package className="h-5 w-5 text-primary" /> Services & Commodities
               </CardTitle>
+              <CardDescription className="text-[10px] font-bold uppercase text-muted-foreground">Log all distributed items and clinical test results</CardDescription>
             </CardHeader>
-            <CardContent className="grid grid-cols-3 gap-4 pt-6">
-              <div className="space-y-2">
-                <Label className="text-[9px] font-bold uppercase opacity-60">Male Condoms</Label>
-                <Input type="number" min="0" value={commodities.mc} onChange={(e) => setCommodities({...commodities, mc: parseInt(e.target.value) || 0})} className="h-10 bg-muted/20" />
+            <CardContent className="pt-6 space-y-8">
+              {/* Primary Commodities */}
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-[9px] font-bold uppercase opacity-60">Male Condoms</Label>
+                  <Input type="number" min="0" value={services.mc} onChange={(e) => setServices({...services, mc: parseInt(e.target.value) || 0})} className="h-10 bg-muted/20" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[9px] font-bold uppercase opacity-60">Female Condoms</Label>
+                  <Input type="number" min="0" value={services.fc} onChange={(e) => setServices({...services, fc: parseInt(e.target.value) || 0})} className="h-10 bg-muted/20" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[9px] font-bold uppercase opacity-60">Lubricants</Label>
+                  <Input type="number" min="0" value={services.lube} onChange={(e) => setServices({...services, lube: parseInt(e.target.value) || 0})} className="h-10 bg-muted/20" />
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label className="text-[9px] font-bold uppercase opacity-60">Female Condoms</Label>
-                <Input type="number" min="0" value={commodities.fc} onChange={(e) => setCommodities({...commodities, fc: parseInt(e.target.value) || 0})} className="h-10 bg-muted/20" />
+
+              {/* Clinical Tests */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-primary/5 rounded-lg border border-primary/10">
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 text-primary">
+                    <Stethoscope className="h-4 w-4" />
+                    <span className="text-[10px] font-black uppercase tracking-widest">HIVST Service</span>
+                  </div>
+                  <div className="flex gap-4">
+                    <div className="w-24 space-y-1">
+                      <Label className="text-[8px] font-bold uppercase">Units</Label>
+                      <Input type="number" min="0" value={services.hivst} onChange={(e) => setServices({...services, hivst: parseInt(e.target.value) || 0})} className="h-8 bg-background" />
+                    </div>
+                    <div className="flex-1 space-y-1">
+                      <Label className="text-[8px] font-bold uppercase">Result</Label>
+                      <Select value={services.hivstResult} onValueChange={(v) => setServices({...services, hivstResult: v})}>
+                        <SelectTrigger className="h-8 bg-background"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Pending">Pending</SelectItem>
+                          <SelectItem value="Non-Reactive">Non-Reactive</SelectItem>
+                          <SelectItem value="Reactive">Reactive (Urgent Linkage)</SelectItem>
+                          <SelectItem value="Inconclusive">Inconclusive</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 text-accent">
+                    <Activity className="h-4 w-4" />
+                    <span className="text-[10px] font-black uppercase tracking-widest">Pregnancy Test Service</span>
+                  </div>
+                  <div className="flex gap-4">
+                    <div className="w-24 space-y-1">
+                      <Label className="text-[8px] font-bold uppercase">Units</Label>
+                      <Input type="number" min="0" value={services.pregTest} onChange={(e) => setServices({...services, pregTest: parseInt(e.target.value) || 0})} className="h-8 bg-background" />
+                    </div>
+                    <div className="flex-1 space-y-1">
+                      <Label className="text-[8px] font-bold uppercase">Result</Label>
+                      <Select value={services.pregResult} onValueChange={(v) => setServices({...services, pregResult: v})}>
+                        <SelectTrigger className="h-8 bg-background"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Pending">Pending</SelectItem>
+                          <SelectItem value="Negative">Negative</SelectItem>
+                          <SelectItem value="Positive">Positive (ANC Linkage)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label className="text-[9px] font-bold uppercase opacity-60">Lubricants</Label>
-                <Input type="number" min="0" value={commodities.lube} onChange={(e) => setCommodities({...commodities, lube: parseInt(e.target.value) || 0})} className="h-10 bg-muted/20" />
+
+              {/* Other Items */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-[9px] font-bold uppercase opacity-60">Pads (Reusable)</Label>
+                  <Input type="number" min="0" value={services.padsReusable} onChange={(e) => setServices({...services, padsReusable: parseInt(e.target.value) || 0})} className="h-10 bg-muted/20" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[9px] font-bold uppercase opacity-60">Pads (Disposable)</Label>
+                  <Input type="number" min="0" value={services.padsDisposable} onChange={(e) => setServices({...services, padsDisposable: parseInt(e.target.value) || 0})} className="h-10 bg-muted/20" />
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -178,6 +264,11 @@ export default function OutreachTrackingPage() {
               {isHighRiskAlert && (
                 <div className="p-3 bg-destructive/20 border border-destructive/30 rounded text-[9px] font-bold uppercase text-destructive flex gap-2">
                   <ShieldAlert className="h-3 w-3 shrink-0" /> CRITICAL: No commodities distributed to high-risk node
+                </div>
+              )}
+              {services.hivstResult === 'Reactive' && (
+                <div className="p-3 bg-destructive/20 border border-destructive/30 rounded text-[9px] font-black uppercase text-destructive flex gap-2">
+                  <ShieldAlert className="h-3 w-3 shrink-0" /> URGENT: Reactive HIVST result. Initiate referral.
                 </div>
               )}
             </CardContent>
