@@ -1,4 +1,3 @@
-
 "use client"
 
 import React from 'react'
@@ -15,7 +14,9 @@ import {
   Globe, 
   MessageSquare,
   Activity,
-  Zap
+  Zap,
+  Users,
+  Link as LinkIcon
 } from 'lucide-react'
 import { 
   LineChart, 
@@ -81,11 +82,11 @@ export default function SocialNetworkMapPage() {
       <div className="flex gap-12 text-[10px] font-black uppercase tracking-tighter text-muted-foreground/60">
         <div className="flex items-center gap-2">
           <div className="w-1 h-4 bg-primary glow-cyan" />
-          Connected Peers: <span className="text-foreground">84</span>
+          Connected Peers: <span className="text-foreground">142</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-1 h-4 bg-primary glow-cyan" />
-          Active Trust Bridges: <span className="text-primary">+12</span>
+          Active Trust Bridges: <span className="text-primary">+18</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-1 h-4 bg-primary glow-cyan" />
@@ -94,61 +95,88 @@ export default function SocialNetworkMapPage() {
       </div>
 
       {/* Central Graph Area */}
-      <div className="relative flex-1 h-[500px] cyber-border border-primary/10 overflow-hidden bg-[radial-gradient(circle_at_center,rgba(0,255,255,0.05)_0%,transparent_70%)]">
-        {/* Glow Lines SVG */}
+      <div className="relative flex-1 h-[600px] cyber-border border-primary/10 overflow-hidden bg-[radial-gradient(circle_at_center,rgba(0,255,255,0.05)_0%,transparent_70%)]">
+        {/* Glow Lines SVG - Connecting nodes based on their % positions */}
         <svg className="absolute inset-0 w-full h-full network-line opacity-40">
-          <line x1="50%" y1="50%" x2="30%" y2="30%" stroke="hsl(var(--primary))" strokeWidth="2" strokeDasharray="10 5" />
-          <line x1="50%" y1="50%" x2="70%" y2="30%" stroke="hsl(var(--primary))" strokeWidth="2" />
-          <line x1="50%" y1="50%" x2="20%" y2="60%" stroke="hsl(var(--accent))" strokeWidth="1" strokeDasharray="5 5" />
-          <line x1="50%" y1="50%" x2="80%" y2="65%" stroke="hsl(var(--primary))" strokeWidth="1" />
-          <line x1="30%" y1="30%" x2="15%" y2="20%" stroke="hsl(var(--primary))" strokeWidth="1" className="animate-flicker" />
-          <line x1="70%" y1="30%" x2="85%" y2="25%" stroke="hsl(var(--primary))" strokeWidth="1" />
+          {/* Main Hub Connections */}
+          <line x1="50%" y1="50%" x2="25%" y2="25%" stroke="hsl(var(--primary))" strokeWidth="2" strokeDasharray="10 5" />
+          <line x1="50%" y1="50%" x2="75%" y2="25%" stroke="hsl(var(--primary))" strokeWidth="2" />
+          <line x1="50%" y1="50%" x2="20%" y2="65%" stroke="hsl(var(--accent))" strokeWidth="1" strokeDasharray="5 5" />
+          <line x1="50%" y1="50%" x2="85%" y2="70%" stroke="hsl(var(--primary))" strokeWidth="1" />
+          <line x1="50%" y1="50%" x2="80%" y2="40%" stroke="hsl(var(--primary))" strokeWidth="1.5" />
+          <line x1="50%" y1="50%" x2="15%" y2="45%" stroke="hsl(var(--accent))" strokeWidth="1" />
+          
+          {/* Secondary Connections (Relationships between satellites) */}
+          <line x1="25%" y1="25%" x2="15%" y2="45%" stroke="hsl(var(--primary))" strokeWidth="0.5" opacity="0.3" />
+          <line x1="75%" y1="25%" x2="80%" y2="40%" stroke="hsl(var(--primary))" strokeWidth="0.5" opacity="0.3" />
+
           {/* Connection Particles */}
-          <circle cx="40%" cy="40%" r="2" fill="hsl(var(--primary))" className="animate-ping" />
-          <circle cx="60%" cy="40%" r="2" fill="hsl(var(--accent))" className="animate-ping" style={{ animationDelay: '1s' }} />
+          <circle cx="37.5%" cy="37.5%" r="2" fill="hsl(var(--primary))" className="animate-ping" />
+          <circle cx="62.5%" cy="37.5%" r="2" fill="hsl(var(--accent))" className="animate-ping" style={{ animationDelay: '1s' }} />
+          <circle cx="65%" cy="45%" r="2" fill="hsl(var(--primary))" className="animate-pulse" />
         </svg>
 
         {/* Central Core Node - Peer Educator */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30">
           <div className="relative">
-            <div className="absolute inset-0 bg-primary/20 rounded-full blur-2xl animate-pulse" />
-            <div className="w-32 h-32 rounded-full border-4 border-primary p-1 bg-background shadow-[0_0_30px_rgba(0,255,255,0.3)]">
+            <div className="absolute inset-0 bg-primary/20 rounded-full blur-3xl animate-pulse" />
+            <div className="w-36 h-36 rounded-full border-4 border-primary p-1 bg-background shadow-[0_0_50px_rgba(0,255,255,0.4)] relative z-10">
               <Avatar className="w-full h-full border-2 border-primary/20">
                 <AvatarImage src="https://picsum.photos/seed/peereducator/300/300" />
                 <AvatarFallback>PE</AvatarFallback>
               </Avatar>
             </div>
-            <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 whitespace-nowrap bg-primary text-background px-3 py-1 rounded-sm text-[10px] font-black uppercase tracking-widest skew-x-[-12deg]">
+            <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap bg-primary text-background px-4 py-1.5 rounded-sm text-[11px] font-black uppercase tracking-[0.2em] skew-x-[-12deg] z-20 shadow-lg">
               Peer Educator
             </div>
           </div>
         </div>
 
-        {/* Satellite Nodes - Influence Groups */}
-        <div className="absolute top-[30%] left-[30%] -translate-x-1/2 -translate-y-1/2 group cursor-pointer">
-          <div className="w-16 h-16 rounded-full border-2 border-primary/40 p-1 bg-background hover:scale-110 transition-transform">
+        {/* Satellite Node 1: Trust Leader (Top Left) */}
+        <div className="absolute top-[25%] left-[25%] -translate-x-1/2 -translate-y-1/2 group cursor-pointer z-20">
+          <div className="w-20 h-20 rounded-full border-2 border-primary p-1 bg-background hover:scale-110 transition-transform shadow-[0_0_15px_rgba(0,255,255,0.2)]">
             <Avatar className="w-full h-full">
-              <AvatarImage src="https://picsum.photos/seed/node1/150/150" />
+              <AvatarImage src="https://picsum.photos/seed/node_leader/150/150" />
             </Avatar>
           </div>
-          <Badge className="absolute -top-2 -right-2 bg-primary/20 border-primary/40 text-[8px] h-4">Leader</Badge>
+          <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-background border-none text-[8px] font-black px-2">LEADER</Badge>
+          <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap bg-background/90 px-2 py-1 border border-primary/30 text-[9px] font-bold">
+            Trust Level: Critical
+          </div>
         </div>
 
-        <div className="absolute top-[30%] left-[70%] -translate-x-1/2 -translate-y-1/2 group cursor-pointer">
-          <div className="w-16 h-16 rounded-full border-2 border-primary/40 p-1 bg-background hover:scale-110 transition-transform">
+        {/* Satellite Node 2: Bridge Node (Top Right) */}
+        <div className="absolute top-[25%] left-[75%] -translate-x-1/2 -translate-y-1/2 group cursor-pointer z-20">
+          <div className="w-18 h-18 rounded-full border-2 border-primary/60 p-1 bg-background hover:scale-110 transition-transform">
             <Avatar className="w-full h-full">
-              <AvatarImage src="https://picsum.photos/seed/node2/150/150" />
+              <AvatarImage src="https://picsum.photos/seed/node_bridge/150/150" />
             </Avatar>
           </div>
-          <div className="absolute -right-12 top-1/2 -translate-y-1/2 bg-accent/20 border border-accent/40 px-2 py-1 rounded text-[8px] font-black text-accent uppercase">
+          <div className="absolute -right-4 -top-2 bg-accent/20 border border-accent/40 p-1 rounded-full">
+            <LinkIcon className="h-3 w-3 text-accent" />
+          </div>
+          <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 text-[9px] font-black text-accent uppercase tracking-widest whitespace-nowrap shadow-sm">
             Bridge Node
           </div>
         </div>
 
-        <div className="absolute top-[60%] left-[20%] -translate-x-1/2 -translate-y-1/2 group cursor-pointer">
-          <div className="w-14 h-14 rounded-full border-2 border-accent/40 p-1 bg-background hover:scale-110 transition-transform">
+        {/* Satellite Node 3: High Influence (Mid Right) */}
+        <div className="absolute top-[40%] left-[80%] -translate-x-1/2 -translate-y-1/2 group cursor-pointer z-20">
+          <div className="w-16 h-16 rounded-full border-2 border-primary/40 p-1 bg-background hover:scale-110 transition-transform">
             <Avatar className="w-full h-full">
-              <AvatarImage src="https://picsum.photos/seed/node3/150/150" />
+              <AvatarImage src="https://picsum.photos/seed/node_high/150/150" />
+            </Avatar>
+          </div>
+          <div className="absolute -bottom-2 -right-2">
+            <Zap className="h-5 w-5 text-primary animate-flicker" />
+          </div>
+        </div>
+
+        {/* Satellite Node 4: Active Participant (Bottom Left) */}
+        <div className="absolute top-[65%] left-[20%] -translate-x-1/2 -translate-y-1/2 group cursor-pointer z-20">
+          <div className="w-16 h-16 rounded-full border-2 border-accent/40 p-1 bg-background hover:scale-110 transition-transform">
+            <Avatar className="w-full h-full">
+              <AvatarImage src="https://picsum.photos/seed/node_active/150/150" />
             </Avatar>
           </div>
           <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2">
@@ -156,13 +184,24 @@ export default function SocialNetworkMapPage() {
           </div>
         </div>
 
-        <div className="absolute top-[65%] left-[80%] -translate-x-1/2 -translate-y-1/2 group cursor-pointer">
-           <div className="w-12 h-12 rounded-full border-2 border-primary/20 p-1 bg-background hover:scale-110 transition-transform">
+        {/* Satellite Node 5: New Connection (Bottom Right) */}
+        <div className="absolute top-[70%] left-[85%] -translate-x-1/2 -translate-y-1/2 group cursor-pointer z-20">
+           <div className="w-14 h-14 rounded-full border-2 border-primary/20 p-1 bg-background hover:scale-110 transition-transform">
             <Avatar className="w-full h-full">
-              <AvatarImage src="https://picsum.photos/seed/node4/150/150" />
+              <AvatarImage src="https://picsum.photos/seed/node_new/150/150" />
             </Avatar>
           </div>
-          <Globe className="absolute -bottom-2 -right-2 h-4 w-4 text-primary bg-background rounded-full p-0.5 border border-primary/40" />
+          <UserPlus className="absolute -top-2 -right-2 h-4 w-4 text-primary bg-background rounded-full p-0.5 border border-primary/40" />
+        </div>
+
+        {/* Satellite Node 6: Community Hub (Mid Left) */}
+        <div className="absolute top-[45%] left-[15%] -translate-x-1/2 -translate-y-1/2 group cursor-pointer z-20">
+           <div className="w-14 h-14 rounded-full border-2 border-muted p-1 bg-background hover:scale-110 transition-transform">
+            <Avatar className="w-full h-full">
+              <AvatarImage src="https://picsum.photos/seed/node_hub/150/150" />
+            </Avatar>
+          </div>
+          <Users className="absolute -bottom-2 -left-2 h-4 w-4 text-muted-foreground" />
         </div>
       </div>
 
