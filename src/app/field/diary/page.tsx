@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useState } from 'react'
@@ -73,7 +72,7 @@ export default function HotspotDiaryPage() {
               New Entry
             </Button>
           </DialogTrigger>
-          <DialogContent className="cyber-border bg-background border-primary/20 top-[15%]">
+          <DialogContent className="cyber-border bg-background border-primary/20 top-[50%]">
             <DialogHeader>
               <DialogTitle className="text-primary glow-cyan">Log New Interaction</DialogTitle>
             </DialogHeader>
