@@ -388,7 +388,9 @@ export default function SocialNetworkMapPage() {
 
       <Dialog open={showStrengthDialog} onOpenChange={setShowStrengthDialog}>
         <DialogContent className="cyber-border bg-background border-primary/20">
-          <DialogHeader><CardTitle className="text-primary font-black italic uppercase">Establish Trust Bridge</CardTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle className="text-primary font-black italic uppercase">Establish Trust Bridge</DialogTitle>
+          </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label className="text-xs uppercase font-black text-muted-foreground">Relationship Strength</Label>
@@ -409,7 +411,9 @@ export default function SocialNetworkMapPage() {
 
       <Dialog open={showAddNodeDialog} onOpenChange={setShowAddNodeDialog}>
         <DialogContent className="cyber-border bg-background border-primary/20">
-          <DialogHeader><CardTitle className="text-primary font-black italic uppercase">Add Peer Node</CardTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle className="text-primary font-black italic uppercase">Add Peer Node</DialogTitle>
+          </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label className="text-xs uppercase font-black text-muted-foreground">Peer Name / Identifier</Label>
