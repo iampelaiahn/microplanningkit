@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState, useMemo } from 'react'
@@ -11,7 +12,6 @@ import {
   CalendarDays, 
   BrainCircuit, 
   Loader2, 
-  Plus, 
   Sparkles,
   ShieldAlert,
   Target,
@@ -25,10 +25,8 @@ import { toast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
 import { RiskLevel } from '@/lib/types'
 import { generateOutreachRecommendation } from '@/ai/flows/generate-outreach-recommendation'
-import { useFirestore, useUser } from '@/firebase'
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
-import { errorEmitter } from '@/firebase/error-emitter'
-import { FirestorePermissionError } from '@/firebase/errors'
+import { useFirestore, useUser, errorEmitter, FirestorePermissionError } from '@/firebase'
+import { collection, addDoc } from 'firebase/firestore'
 
 const TOPICS = [
   "HIV Testing", 
@@ -96,7 +94,7 @@ export default function OutreachTrackingPage() {
       });
       setAiResult(result);
 
-      // 2. Save to Firestore for permanent tracking and stock management
+      // 2. Save to Firestore
       if (firestore) {
         const visitData = {
           peerEducatorId: user.uid,
@@ -170,7 +168,7 @@ export default function OutreachTrackingPage() {
                     <SelectItem value="Low">Low (Monthly)</SelectItem>
                     <SelectItem value="Unknown">Unknown</SelectItem>
                   </SelectContent>
-                </Select>
+                </RiskLevel>
               </div>
               <div className="flex items-center space-x-3 pt-6">
                 <Checkbox id="reg" checked={registered} onCheckedChange={(c) => setRegistered(!!c)} />
@@ -187,7 +185,6 @@ export default function OutreachTrackingPage() {
               <CardDescription className="text-[10px] font-bold uppercase text-muted-foreground">Log all distributed items and clinical test results</CardDescription>
             </CardHeader>
             <CardContent className="pt-6 space-y-8">
-              {/* Primary Commodities */}
               <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label className="text-[9px] font-bold uppercase opacity-60">Male Condoms</Label>
@@ -203,7 +200,6 @@ export default function OutreachTrackingPage() {
                 </div>
               </div>
 
-              {/* Clinical Tests */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-primary/5 rounded-lg border border-primary/10">
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 text-primary">
@@ -255,7 +251,6 @@ export default function OutreachTrackingPage() {
                 </div>
               </div>
 
-              {/* Other Items */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label className="text-[9px] font-bold uppercase opacity-60">Pads (Reusable)</Label>
