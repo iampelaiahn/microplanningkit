@@ -1,0 +1,46 @@
+
+{
+  "entities": {
+    "OutreachVisit": {
+      "title": "Outreach Visit",
+      "description": "A record of an outreach contact with a peer, including commodities distributed and clinical services offered.",
+      "type": "object",
+      "properties": {
+        "peerEducatorId": { "type": "string", "description": "UID of the peer educator who conducted the visit" },
+        "peerEducatorName": { "type": "string", "description": "Display name of the peer educator" },
+        "uin": { "type": "string", "description": "Unique identifier of the peer" },
+        "visitDate": { "type": "string", "format": "date", "description": "Date the visit occurred" },
+        "riskLevel": { "type": "string", "enum": ["High", "Medium", "Low", "Unknown"] },
+        "isRegisteredAtClinic": { "type": "boolean" },
+        "commodities": {
+          "type": "object",
+          "properties": {
+            "mc": { "type": "number" },
+            "fc": { "type": "number" },
+            "lube": { "type": "number" },
+            "hivst": { "type": "number" },
+            "hivstResult": { "type": "string" },
+            "pregTest": { "type": "number" },
+            "pregResult": { "type": "string" },
+            "padsReusable": { "type": "number" },
+            "padsDisposable": { "type": "number" }
+          }
+        },
+        "topicsDiscussed": { "type": "array", "items": { "type": "string" } },
+        "aiSummary": { "type": "string" },
+        "aiActions": { "type": "array", "items": { "type": "string" } },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uin", "visitDate", "riskLevel", "peerEducatorId"]
+    }
+  },
+  "auth": {
+    "providers": ["google.com"]
+  },
+  "firestore": {
+    "/outreachVisits/{visitId}": {
+      "schema": "OutreachVisit",
+      "description": "Collection of all outreach visits for tracking and stock management"
+    }
+  }
+}

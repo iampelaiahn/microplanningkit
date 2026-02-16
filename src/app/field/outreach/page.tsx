@@ -19,18 +19,34 @@ import {
   Package,
   ArrowRight,
   Stethoscope,
-  Activity
+  Activity,
+  Database
 } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
 import { RiskLevel } from '@/lib/types'
 import { generateOutreachRecommendation } from '@/ai/flows/generate-outreach-recommendation'
+import { useFirestore, useUser } from '@/firebase'
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
+import { errorEmitter } from '@/firebase/error-emitter'
+import { FirestorePermissionError } from '@/firebase/errors'
 
-const TOPICS = ["HIV Testing", "Prep/Pep", "Mental Health", "GBV Support", "Stigma Reduction", "Clinical Referrals"];
+const TOPICS = [
+  "HIV Testing", 
+  "Prep/Pep", 
+  "Mental Health", 
+  "GBV Support", 
+  "Stigma Reduction", 
+  "Clinical Referrals",
+  "Lubricant Distribution",
+  "Pregnancy Testing"
+];
 
 export default function OutreachTrackingPage() {
   const [loading, setLoading] = useState(false);
   const [aiResult, setAiResult] = useState<any>(null);
+  const firestore = useFirestore();
+  const { user } = useUser();
   
   // Form State
   const [visitDate, setVisitDate] = useState("");
@@ -64,8 +80,14 @@ export default function OutreachTrackingPage() {
       return;
     }
 
+    if (!user) {
+      toast({ title: "Auth Required", description: "You must be signed in to log visits.", variant: "destructive" });
+      return;
+    }
+
     setLoading(true);
     try {
+      // 1. Generate AI Analysis
       const result = await generateOutreachRecommendation({
         visitDate,
         riskLevel: risk,
@@ -74,6 +96,34 @@ export default function OutreachTrackingPage() {
         isRegisteredAtClinic: registered
       });
       setAiResult(result);
+
+      // 2. Save to Firestore for permanent tracking and stock management
+      if (firestore) {
+        const visitData = {
+          peerEducatorId: user.uid,
+          peerEducatorName: user.displayName || "Anonymous Peer",
+          uin,
+          visitDate,
+          riskLevel: risk,
+          isRegisteredAtClinic: registered,
+          commodities: services,
+          topicsDiscussed: topics,
+          aiSummary: result.summary,
+          aiActions: result.actions,
+          timestamp: new Date().toISOString()
+        };
+
+        addDoc(collection(firestore, 'outreachVisits'), visitData)
+          .catch(async (e) => {
+            const permissionError = new FirestorePermissionError({
+              path: 'outreachVisits',
+              operation: 'create',
+              requestResourceData: visitData
+            });
+            errorEmitter.emit('permission-error', permissionError);
+          });
+      }
+
       toast({ title: "Visit Logged", description: `Outreach for node ${uin} committed to intelligence engine.` });
     } catch (e) {
       toast({ title: "System Error", description: "AI recommendation engine unreachable.", variant: "destructive" });
@@ -90,7 +140,7 @@ export default function OutreachTrackingPage() {
           <p className="text-muted-foreground text-lg italic">Weekly Performance & Caseload Engagement Matrix</p>
         </div>
         <Button onClick={handleSubmit} disabled={loading} className="bg-primary text-background font-black uppercase tracking-widest h-14 w-full md:w-auto px-10 shadow-[0_0_20px_rgba(0,255,255,0.3)]">
-          {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Target className="h-5 w-5 mr-2" />} Commit & Analyze Visit
+          {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Database className="h-5 w-5 mr-2" />} Commit & Save Visit
         </Button>
       </div>
 
@@ -227,7 +277,7 @@ export default function OutreachTrackingPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-6">
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {TOPICS.map(t => (
                   <div key={t} className="flex items-center space-x-2">
                     <Checkbox 
@@ -278,7 +328,7 @@ export default function OutreachTrackingPage() {
             <CardHeader className="border-b border-primary/10">
               <CardTitle className="text-lg font-black italic text-primary flex items-center gap-2">
                 <BrainCircuit className="h-5 w-5" /> AI Recommendation
-              </CardTitle>
+              </BrainCircuit>
             </CardHeader>
             <CardContent className="pt-6">
               {!aiResult ? (
