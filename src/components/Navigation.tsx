@@ -23,7 +23,7 @@ export function Navigation() {
     { name: 'Social Map', href: '/hotspots', icon: Map },
     { name: 'Diary', href: '/field/diary', icon: BookOpen },
     { name: 'Assessment', href: '/assessment', icon: ClipboardCheck },
-    { name: 'Profiling', href: '/field', icon: Target },
+    { name: 'Profiling', href: '/field/profiling', icon: Target },
     { name: 'Supervisor', href: '/dashboard', icon: UserCheck },
   ];
 
