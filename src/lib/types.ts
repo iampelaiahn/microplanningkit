@@ -34,11 +34,12 @@ export type KPRecord = {
 };
 
 export type RelationshipStrength = 'Weak' | 'Moderate' | 'Strong' | 'Critical';
+export type PersonType = 'Peer Leader' | 'Influencer' | 'KP Member';
 
 export type Hotspot = {
   id: string;
   name: string;
-  type: 'Facility' | 'Community' | 'Peer';
+  type: PersonType;
   lat: number;
   lng: number;
   ward: string;
