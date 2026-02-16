@@ -1,3 +1,4 @@
+
 "use client"
 
 import React from 'react'
@@ -13,7 +14,8 @@ import {
   TrendingUp, 
   Globe, 
   MessageSquare,
-  Activity
+  Activity,
+  Zap
 } from 'lucide-react'
 import { 
   LineChart, 
@@ -53,7 +55,7 @@ export default function SocialNetworkMapPage() {
           <div className="relative flex-1 lg:w-96">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary/60" />
             <Input 
-              placeholder="Search intelligence nodes..." 
+              placeholder="Search trust nodes..." 
               className="pl-10 cyber-border border-primary/20 bg-background/40 h-10 italic"
             />
           </div>
@@ -62,15 +64,15 @@ export default function SocialNetworkMapPage() {
         <div className="flex items-center gap-6 text-xs font-bold uppercase tracking-widest">
           <div className="flex items-center gap-2 group cursor-pointer hover:text-primary transition-colors">
             <Mail className="h-4 w-4 text-accent" />
-            <span>Messages: <span className="text-primary glow-cyan">99+</span></span>
+            <span>Encrypted Chat: <span className="text-primary glow-cyan">99+</span></span>
           </div>
           <div className="flex items-center gap-2 group cursor-pointer hover:text-primary transition-colors">
             <Bell className="h-4 w-4 text-accent" />
-            <span>Notifications: <span className="text-primary glow-cyan">21</span></span>
+            <span>Alerts: <span className="text-primary glow-cyan">21</span></span>
           </div>
           <div className="flex items-center gap-2 group cursor-pointer hover:text-primary transition-colors">
             <UserPlus className="h-4 w-4 text-accent" />
-            <span>Peer Requests: <span className="text-primary glow-cyan">5</span></span>
+            <span>Referrals: <span className="text-primary glow-cyan">5</span></span>
           </div>
         </div>
       </div>
@@ -79,15 +81,15 @@ export default function SocialNetworkMapPage() {
       <div className="flex gap-12 text-[10px] font-black uppercase tracking-tighter text-muted-foreground/60">
         <div className="flex items-center gap-2">
           <div className="w-1 h-4 bg-primary glow-cyan" />
-          Online Nodes: <span className="text-foreground">8,230,000</span>
+          Connected Peers: <span className="text-foreground">84</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-1 h-4 bg-primary glow-cyan" />
-          New Trust Connections: <span className="text-primary">+12,450</span>
+          Active Trust Bridges: <span className="text-primary">+12</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-1 h-4 bg-primary glow-cyan" />
-          Trending Nano-Networks
+          Field Activity Level: <span className="text-primary">Optimized</span>
         </div>
       </div>
 
@@ -106,23 +108,23 @@ export default function SocialNetworkMapPage() {
           <circle cx="60%" cy="40%" r="2" fill="hsl(var(--accent))" className="animate-ping" style={{ animationDelay: '1s' }} />
         </svg>
 
-        {/* Central Core Node */}
+        {/* Central Core Node - Peer Educator */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
           <div className="relative">
             <div className="absolute inset-0 bg-primary/20 rounded-full blur-2xl animate-pulse" />
             <div className="w-32 h-32 rounded-full border-4 border-primary p-1 bg-background shadow-[0_0_30px_rgba(0,255,255,0.3)]">
               <Avatar className="w-full h-full border-2 border-primary/20">
-                <AvatarImage src="https://picsum.photos/seed/central/300/300" />
-                <AvatarFallback>CN</AvatarFallback>
+                <AvatarImage src="https://picsum.photos/seed/peereducator/300/300" />
+                <AvatarFallback>PE</AvatarFallback>
               </Avatar>
             </div>
             <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 whitespace-nowrap bg-primary text-background px-3 py-1 rounded-sm text-[10px] font-black uppercase tracking-widest skew-x-[-12deg]">
-              Core Influencer
+              Peer Educator
             </div>
           </div>
         </div>
 
-        {/* Satellite Nodes */}
+        {/* Satellite Nodes - Influence Groups */}
         <div className="absolute top-[30%] left-[30%] -translate-x-1/2 -translate-y-1/2 group cursor-pointer">
           <div className="w-16 h-16 rounded-full border-2 border-primary/40 p-1 bg-background hover:scale-110 transition-transform">
             <Avatar className="w-full h-full">
@@ -171,7 +173,7 @@ export default function SocialNetworkMapPage() {
           <CardContent className="p-4 space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-xs font-black uppercase text-primary tracking-widest flex items-center gap-2">
-                <Activity className="h-4 w-4" /> Network Analytics
+                <Activity className="h-4 w-4" /> Reach Analytics
               </h3>
             </div>
             <div className="h-24">
@@ -186,17 +188,17 @@ export default function SocialNetworkMapPage() {
             </div>
             <div className="flex items-center justify-between pt-2">
               <div className="space-y-1">
-                <p className="text-[10px] text-muted-foreground uppercase">Connection Growth</p>
+                <p className="text-[10px] text-muted-foreground uppercase">Trust Growth</p>
                 <div className="flex items-center gap-2 text-xl font-black text-primary glow-cyan">
                   <TrendingUp className="h-5 w-5" />
-                  +24.8%
+                  +14.2%
                 </div>
               </div>
               <div className="relative h-12 w-12 flex flex-col items-center justify-center">
                  <div className="absolute inset-0 border-2 border-primary/20 rounded-full" />
                  <div className="absolute inset-0 border-t-2 border-primary rounded-full animate-spin" />
-                 <span className="text-[10px] font-black">78%</span>
-                 <p className="text-[6px] uppercase absolute -bottom-2">Activity</p>
+                 <span className="text-[10px] font-black">82%</span>
+                 <p className="text-[6px] uppercase absolute -bottom-2">Engagement</p>
               </div>
             </div>
           </CardContent>
@@ -207,8 +209,8 @@ export default function SocialNetworkMapPage() {
           <CardContent className="p-6 space-y-6">
             <div className="space-y-3">
               <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-tighter">
-                <span className="text-muted-foreground">Weak Relationships</span>
-                <span className="text-foreground">Bvrore - </span>
+                <span className="text-muted-foreground">Weak Connections</span>
+                <span className="text-foreground">Initial Outreach</span>
               </div>
               <div className="h-1 bg-muted rounded-full overflow-hidden">
                 <div className="h-full bg-accent/40 w-1/4" />
@@ -216,8 +218,8 @@ export default function SocialNetworkMapPage() {
             </div>
             <div className="space-y-3">
               <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-tighter">
-                <span className="text-muted-foreground">Medium Relationships</span>
-                <span className="text-foreground">Fair connections - outreach apprentices</span>
+                <span className="text-muted-foreground">Stable Trusts</span>
+                <span className="text-foreground">Regular Service Users</span>
               </div>
               <div className="h-1 bg-muted rounded-full overflow-hidden">
                 <div className="h-full bg-primary/40 w-2/4" />
@@ -225,8 +227,8 @@ export default function SocialNetworkMapPage() {
             </div>
             <div className="space-y-3">
               <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-tighter">
-                <span className="text-primary glow-cyan">Strong Influences - Relationships</span>
-                <span className="text-foreground">CORE CLUSTERS</span>
+                <span className="text-primary glow-cyan">High Influence Peers</span>
+                <span className="text-foreground">Core Mobilizers</span>
               </div>
               <div className="h-1 bg-muted rounded-full overflow-hidden">
                 <div className="h-full bg-primary glow-cyan w-3/4 shadow-[0_0_10px_rgba(0,255,255,0.5)]" />
@@ -239,7 +241,7 @@ export default function SocialNetworkMapPage() {
         <Card className="cyber-border border-primary/10 bg-background/40 relative">
           <CardContent className="p-4 space-y-4">
              <h3 className="text-xs font-black uppercase text-primary tracking-widest">
-               Trending Intelligence
+               Field Intelligence
              </h3>
              <div className="space-y-3">
                 {trendingTopics.map((topic) => (
