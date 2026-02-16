@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useState, useRef, useMemo } from 'react'
@@ -17,7 +16,8 @@ import {
   Plus,
   X,
   ShieldAlert,
-  AlertTriangle
+  AlertTriangle,
+  Users
 } from 'lucide-react'
 import { 
   ResponsiveContainer, 
