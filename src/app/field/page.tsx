@@ -12,6 +12,7 @@ import { INITIAL_KPS } from '@/lib/store'
 import { generateUIN } from '@/components/UINGenerator'
 import { toast } from '@/hooks/use-toast'
 import Link from 'next/link'
+import { cn } from '@/lib/utils'
 
 export default function FieldDashboard() {
   const [kps, setKps] = useState(INITIAL_KPS);

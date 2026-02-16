@@ -7,10 +7,11 @@ import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { Shield, BrainCircuit, Loader2, Sparkles, AlertTriangle } from 'lucide-react'
+import { Shield, BrainCircuit, Loader2, Sparkles, AlertTriangle, Activity } from 'lucide-react'
 import { generateRiskAssessmentSummary } from '@/ai/flows/generate-risk-assessment-summary'
 import { toast } from '@/hooks/use-toast'
 import { Badge } from '@/components/ui/badge'
+import { cn } from '@/lib/utils'
 
 const RISK_FACTORS = [
   "Inconsistent condom use",
