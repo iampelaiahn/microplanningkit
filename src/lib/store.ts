@@ -44,7 +44,9 @@ export const INITIAL_HOTSPOTS: Hotspot[] = [
     relationshipStrength: 'Moderate',
     influenceScore: 65,
     targetGoal: 'Establish peer leader connection',
-    contactPerson: 'Sarah'
+    contactPerson: 'Sarah',
+    x: 40,
+    y: 30
   },
   { 
     id: 'h2', 
@@ -57,7 +59,9 @@ export const INITIAL_HOTSPOTS: Hotspot[] = [
     relationshipStrength: 'Strong',
     influenceScore: 90,
     targetGoal: 'Maintain high referral rates',
-    contactPerson: 'Dr. Moyo'
+    contactPerson: 'Dr. Moyo',
+    x: 60,
+    y: 40
   },
   { 
     id: 'h3', 
@@ -70,7 +74,9 @@ export const INITIAL_HOTSPOTS: Hotspot[] = [
     relationshipStrength: 'Moderate',
     influenceScore: 72,
     targetGoal: 'Improve after-hours access',
-    contactPerson: 'Nurse Sibanda'
+    contactPerson: 'Nurse Sibanda',
+    x: 30,
+    y: 60
   },
   { 
     id: 'h4', 
@@ -83,6 +89,8 @@ export const INITIAL_HOTSPOTS: Hotspot[] = [
     relationshipStrength: 'Weak',
     influenceScore: 30,
     targetGoal: 'Strengthen influence and trust',
-    contactPerson: 'Clara'
+    contactPerson: 'Clara',
+    x: 70,
+    y: 70
   }
 ];

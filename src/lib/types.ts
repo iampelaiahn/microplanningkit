@@ -47,6 +47,8 @@ export type Hotspot = {
   influenceScore?: number;
   targetGoal?: string;
   contactPerson?: string;
+  x?: number; // percentage 0-100
+  y?: number; // percentage 0-100
 };
 
 export type OutreachVisit = {
