@@ -1,3 +1,4 @@
+
 "use client"
 
 import Link from 'next/link'
@@ -32,7 +33,7 @@ export function Navigation() {
     const peRoutes = ['/field', '/sync'];
     const isPE = peRoutes.some(r => pathname.startsWith(r)) || pathname === '/field';
     
-    const chmRoutes = ['/dashboard', '/inventory', '/assessment', '/monitoring'];
+    const chmRoutes = ['/dashboard', '/inventory', '/assessment', '/monitoring', '/hotspots/monitoring'];
     const isCHM = chmRoutes.some(r => pathname.startsWith(r));
 
     if (isCHM) {
@@ -44,6 +45,7 @@ export function Navigation() {
 
   const chmItems = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+    { name: 'Hotspot tracker', href: '/hotspots/monitoring', icon: Map },
     { name: 'Field tracker', href: '/monitoring', icon: Activity },
     { name: 'Assessment repo', href: '/assessment', icon: ShieldCheck },
     { name: 'Inventory', href: '/inventory', icon: Package },
