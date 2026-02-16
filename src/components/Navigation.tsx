@@ -6,15 +6,12 @@ import { usePathname } from 'next/navigation'
 import { 
   Shield, 
   Map, 
-  BookOpen, 
-  ClipboardCheck, 
-  Target, 
-  RefreshCw, 
-  LogOut,
   LayoutDashboard,
   Package,
   Home,
-  UserCheck
+  Activity,
+  ShieldCheck,
+  LogOut
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -22,24 +19,13 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 export function Navigation() {
   const pathname = usePathname();
 
-  // Determine which navigation set to show based on the current context
-  const isSupervisorRoute = pathname.startsWith('/dashboard') || pathname.startsWith('/inventory');
-
-  const fieldItems = [
-    { name: 'Social Map', href: '/hotspots', icon: Map },
-    { name: 'Diary', href: '/field/diary', icon: BookOpen },
-    { name: 'Assess', href: '/assessment', icon: ClipboardCheck },
-    { name: 'Profile', href: '/field/profiling', icon: Target },
-    { name: 'Sync', href: '/sync', icon: RefreshCw },
-  ];
-
-  const supervisorItems = [
+  const navItems = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+    { name: 'Field tracker', href: '/field', icon: Activity },
+    { name: 'Hotspots', href: '/hotspots', icon: Map },
+    { name: 'Assessment repo', href: '/assessment', icon: ShieldCheck },
     { name: 'Inventory', href: '/inventory', icon: Package },
   ];
-
-  const navItems = isSupervisorRoute ? supervisorItems : fieldItems;
-  const contextTitle = isSupervisorRoute ? "Supervisor Hub" : "Field Intel";
 
   return (
     <nav className={cn(
@@ -57,7 +43,7 @@ export function Navigation() {
           <span className="text-xl font-bold tracking-tight text-foreground glow-cyan">Sentinel</span>
         </Link>
         <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest pl-11">
-          {contextTitle}
+          Surveillance Hub
         </p>
       </div>
 
@@ -68,17 +54,8 @@ export function Navigation() {
 
       {/* Nav Items */}
       <div className="flex flex-row md:flex-col items-center md:items-stretch gap-1 md:gap-2 w-full">
-        {/* Switch Role Toggle - Desktop Only */}
-        <Link 
-          href={isSupervisorRoute ? "/field" : "/dashboard"}
-          className="hidden md:flex items-center gap-2 px-4 py-2 mb-4 text-[10px] font-black uppercase tracking-tighter text-muted-foreground hover:text-primary transition-colors border border-dashed border-border rounded-lg"
-        >
-          <UserCheck className="h-4 w-4" />
-          Switch to {isSupervisorRoute ? "Field Kit" : "Supervisor"}
-        </Link>
-
         {navItems.map((item) => {
-          const isActive = pathname === item.href;
+          const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
           return (
             <Link
               key={item.href}
