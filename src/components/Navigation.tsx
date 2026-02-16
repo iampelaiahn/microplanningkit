@@ -9,7 +9,7 @@ import {
   BookOpen, 
   ClipboardCheck, 
   Target, 
-  UserCheck, 
+  RefreshCw, 
   LogOut
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -23,7 +23,7 @@ export function Navigation() {
     { name: 'Diary', href: '/field/diary', icon: BookOpen },
     { name: 'Assess', href: '/assessment', icon: ClipboardCheck },
     { name: 'Profile', href: '/field/profiling', icon: Target },
-    { name: 'Super', href: '/dashboard', icon: UserCheck },
+    { name: 'Sync', href: '/sync', icon: RefreshCw },
   ];
 
   return (
