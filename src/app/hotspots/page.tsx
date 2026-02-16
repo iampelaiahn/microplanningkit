@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { 
   Search, 
-  Map as MapIcon, 
   Activity,
   Network,
   Link as LinkIcon,
@@ -21,7 +20,8 @@ import {
   Users,
   MapPin,
   Shield,
-  Compass
+  Compass,
+  Share2
 } from 'lucide-react'
 import { 
   Dialog,
@@ -41,7 +41,6 @@ import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
 import { RelationshipStrength } from '@/lib/types'
 import { INITIAL_HOTSPOTS } from '@/lib/store'
-import { PlaceHolderImages } from '@/lib/placeholder-images'
 
 type Link = {
   from: string;
@@ -65,21 +64,15 @@ export default function SocialNetworkMapPage() {
     { from: 'h3', to: 'h1', strength: 'Moderate' },
   ]);
 
-  const mapImage = PlaceHolderImages.find(img => img.id === 'mbare-map');
-
-  const MAP_BOUNDS = {
-    minLat: -17.868,
-    maxLat: -17.850,
-    minLng: 31.030,
-    maxLng: 31.055
-  };
-
+  // Use fixed coordinate mapping for abstract network layout based on original data
   const projectCoord = (lat: number, lng: number) => {
-    const y = ((lat - MAP_BOUNDS.minLat) / (MAP_BOUNDS.maxLat - MAP_BOUNDS.minLat)) * 100;
-    const x = ((lng - MAP_BOUNDS.minLng) / (MAP_BOUNDS.maxLng - MAP_BOUNDS.minLng)) * 100;
+    const minLat = -17.868, maxLat = -17.850;
+    const minLng = 31.030, maxLng = 31.055;
+    const y = ((lat - minLat) / (maxLat - minLat)) * 100;
+    const x = ((lng - minLng) / (maxLng - minLng)) * 100;
     return { 
-      x: Math.max(5, Math.min(95, x)), 
-      y: 100 - Math.max(5, Math.min(95, y)) 
+      x: Math.max(10, Math.min(90, x)), 
+      y: 100 - Math.max(10, Math.min(90, y)) 
     };
   };
 
@@ -136,7 +129,7 @@ export default function SocialNetworkMapPage() {
     setShowStrengthDialog(false);
   };
 
-  const renderPin = (hotspot: typeof hotspots[0]) => {
+  const renderNode = (hotspot: typeof hotspots[0]) => {
     const isIsolated = isolatedNodes.includes(hotspot.id);
     const { x, y } = projectCoord(hotspot.lat, hotspot.lng);
 
@@ -148,20 +141,20 @@ export default function SocialNetworkMapPage() {
           hotspot.id === selectedSourceId && "scale-125 z-40",
           hotspot.id === selectedTargetId && "scale-125 z-40"
         )} 
-        style={{ top: `${y}%`, left: `${x}%`, transform: 'translate(-50%, -100%)' }} 
+        style={{ top: `${y}%`, left: `${x}%`, transform: 'translate(-50%, -50%)' }} 
         onPointerDown={handlePointerDown(hotspot.id)}
       >
         <div className="relative flex flex-col items-center">
           <div className={cn(
-            "relative flex items-center justify-center w-12 h-12 rounded-full border-2 bg-background shadow-xl transition-all",
+            "relative flex items-center justify-center w-10 h-10 rounded-full border-2 bg-background shadow-xl transition-all",
             hotspot.type === 'Facility' ? "border-primary text-primary shadow-primary/20" : 
             hotspot.type === 'Peer' ? "border-accent text-accent shadow-accent/20" :
             "border-green-500 text-green-500",
             isIsolated && "animate-flicker border-destructive text-destructive shadow-destructive/40"
           )}>
-            {hotspot.type === 'Facility' && <Building2 className="h-6 w-6" />}
-            {hotspot.type === 'Community' && <Target className="h-6 w-6" />}
-            {hotspot.type === 'Peer' && <Shield className="h-6 w-6" />}
+            {hotspot.type === 'Facility' && <Building2 className="h-5 w-5" />}
+            {hotspot.type === 'Community' && <Target className="h-5 w-5" />}
+            {hotspot.type === 'Peer' && <Shield className="h-5 w-5" />}
             
             <div className="absolute bottom-full mb-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
                <Card className="p-2 border-primary/20 bg-background/95 backdrop-blur whitespace-nowrap">
@@ -173,17 +166,10 @@ export default function SocialNetworkMapPage() {
                </Card>
             </div>
           </div>
-          
-          <div className={cn(
-            "w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[8px]",
-            hotspot.type === 'Facility' ? "border-t-primary" : 
-            hotspot.type === 'Peer' ? "border-t-accent" : "border-t-green-500",
-            isIsolated && "border-t-destructive"
-          )} />
 
           {isIsolated && (
             <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-              <Badge className="bg-destructive text-white text-[7px] font-black py-0 px-1 leading-none uppercase animate-pulse">Isolated</Badge>
+              <Badge className="bg-destructive text-white text-[7px] font-black py-0 px-1 leading-none uppercase animate-pulse">ISOLATED PEER</Badge>
             </div>
           )}
         </div>
@@ -195,15 +181,15 @@ export default function SocialNetworkMapPage() {
     <div className="min-h-screen bg-background bg-grid p-6 space-y-6 overflow-hidden select-none">
       <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
         <div className="flex items-center gap-8 w-full lg:w-auto">
-          <h1 className="text-3xl font-black tracking-tighter text-primary glow-cyan uppercase italic">Geo-Social Intelligence</h1>
+          <h1 className="text-3xl font-black tracking-tighter text-primary glow-cyan uppercase italic">Social Network Map</h1>
           <div className="relative flex-1 lg:w-96">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary/60" />
-            <Input placeholder="Search geographic nodes..." className="pl-10 cyber-border border-primary/20 bg-background/40 h-10 italic" />
+            <Input placeholder="Search network nodes..." className="pl-10 cyber-border border-primary/20 bg-background/40 h-10 italic" />
           </div>
         </div>
         <div className="flex items-center gap-4">
           <Button onClick={() => setLinkingMode(true)} className={cn("border gap-2 h-10 transition-all shadow-lg", linkingMode ? "bg-accent text-background border-accent animate-pulse" : "bg-accent/20 border-accent/40 text-accent")}>
-            <LinkIcon className="h-4 w-4" /> Link Geographic Nodes
+            <LinkIcon className="h-4 w-4" /> Establish Trust Bridge
           </Button>
         </div>
       </div>
@@ -233,7 +219,7 @@ export default function SocialNetworkMapPage() {
         <Card className={cn("bg-card/40 border p-3 flex items-center gap-3", isolatedNodes.length > 0 ? "border-destructive/40 bg-destructive/5" : "border-primary/10")}>
            <Users className={cn("h-5 w-5", isolatedNodes.length > 0 ? "text-destructive" : "text-primary")} />
            <div>
-             <p className="text-[9px] font-black text-muted-foreground uppercase leading-none mb-1">Isolated Spots</p>
+             <p className="text-[9px] font-black text-muted-foreground uppercase leading-none mb-1">Isolated Nodes</p>
              <p className={cn("text-xl font-black tracking-tighter", isolatedNodes.length > 0 ? "text-destructive" : "text-foreground")}>
                {isolatedNodes.length}
              </p>
@@ -244,20 +230,20 @@ export default function SocialNetworkMapPage() {
           <Card className="bg-destructive/10 border-destructive/20 p-3 flex items-center gap-3 animate-pulse">
             <ShieldAlert className="h-5 w-5 text-destructive" />
             <div>
-              <p className="text-[8px] font-black text-destructive uppercase leading-none">Microplanning Risk</p>
-              <p className="text-[10px] font-bold text-destructive leading-tight uppercase">Insufficient Network Coverage</p>
+              <p className="text-[8px] font-black text-destructive uppercase leading-none">Viability Warning</p>
+              <p className="text-[10px] font-bold text-destructive leading-tight uppercase">INSUFFICIENT NETWORK FOR MICROPLANNING</p>
             </div>
           </Card>
         )}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[700px]">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[650px]">
         <Card className="lg:col-span-1 cyber-border border-primary/10 bg-background/40 p-4 space-y-6 overflow-y-auto">
           <div className="space-y-1">
             <h2 className="text-xs font-black uppercase text-primary tracking-widest flex items-center gap-2">
-              <Network className="h-4 w-4" /> Node Trust Bridges
+              <Share2 className="h-4 w-4" /> Relationship Ledger
             </h2>
-            <p className="text-[8px] text-muted-foreground font-medium italic">Geographic links build operational reach</p>
+            <p className="text-[8px] text-muted-foreground font-medium italic">Establishing bridges builds microplanner trust</p>
           </div>
           
           <div className="space-y-3">
@@ -280,16 +266,34 @@ export default function SocialNetworkMapPage() {
             <h3 className="text-[9px] font-black uppercase text-muted-foreground tracking-widest mb-4">Legend</h3>
             <div className="space-y-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-primary/20 rounded border border-primary/40"><Building2 className="h-3 w-3 text-primary" /></div>
+                <div className="p-1.5 bg-primary/20 rounded-full border border-primary/40"><Building2 className="h-3 w-3 text-primary" /></div>
                 <span className="text-[9px] font-black uppercase">Facility Node</span>
               </div>
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-green-500/20 rounded border border-green-500/40"><Target className="h-3 w-3 text-green-500" /></div>
+                <div className="p-1.5 bg-green-500/20 rounded-full border border-green-500/40"><Target className="h-3 w-3 text-green-500" /></div>
                 <span className="text-[9px] font-black uppercase">Community Hotspot</span>
               </div>
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-accent/20 rounded border border-accent/40"><Shield className="h-3 w-3 text-accent" /></div>
+                <div className="p-1.5 bg-accent/20 rounded-full border border-accent/40"><Shield className="h-3 w-3 text-accent" /></div>
                 <span className="text-[9px] font-black uppercase">Peer Leader</span>
+              </div>
+              <div className="pt-2 space-y-2 border-t border-primary/5">
+                <div className="flex items-center gap-2">
+                   <div className="w-6 h-[1px] bg-muted-foreground border-dashed" />
+                   <span className="text-[8px] uppercase font-bold text-muted-foreground">Weak (Dotted)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                   <div className="w-6 h-[1.5px] bg-primary opacity-80" />
+                   <span className="text-[8px] uppercase font-bold text-primary">Moderate (Thin)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                   <div className="w-6 h-[3px] bg-primary" />
+                   <span className="text-[8px] uppercase font-bold text-primary">Strong (Bold)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                   <div className="w-6 h-[3px] bg-accent shadow-[0_0_5px_rgba(255,120,0,0.8)]" />
+                   <span className="text-[8px] uppercase font-bold text-accent">Critical (Glowing)</span>
+                </div>
               </div>
             </div>
           </div>
@@ -297,25 +301,21 @@ export default function SocialNetworkMapPage() {
 
         <div 
           className={cn(
-            "lg:col-span-3 relative h-full cyber-border border-primary/10 overflow-hidden",
-            "bg-cover bg-center grayscale opacity-90 contrast-125",
+            "lg:col-span-3 relative h-full cyber-border border-primary/10 overflow-hidden bg-background/50",
             linkingMode && "ring-2 ring-accent/40 cursor-crosshair"
           )}
-          style={{ backgroundImage: `url(${mapImage?.imageUrl})` }}
-          data-ai-hint="city map"
         >
           {/* Engine Header Overlay */}
           <div className="absolute top-4 left-4 z-40 space-y-1 pointer-events-none">
             <Badge className="bg-primary/80 text-background font-black uppercase text-[10px] tracking-widest shadow-lg">
-              Live Geo-Spatial Engine
+              Network Analysis Engine
             </Badge>
             <div className="flex items-center gap-2 text-[8px] font-bold text-primary/60 uppercase">
               <Compass className="h-3 w-3" />
-              Mbare Field Grid v1.2
+              Field Integrity Matrix
             </div>
           </div>
 
-          <div className="absolute inset-0 bg-background/60 mix-blend-multiply pointer-events-none" />
           <div className="absolute inset-0 bg-grid opacity-20 pointer-events-none" />
 
           <svg className="absolute inset-0 w-full h-full network-line opacity-60 pointer-events-none">
@@ -329,7 +329,7 @@ export default function SocialNetworkMapPage() {
             })}
           </svg>
 
-          {hotspots.map(hotspot => renderPin(hotspot))}
+          {hotspots.map(hotspot => renderNode(hotspot))}
 
           {linkingMode && (
              <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-accent text-background px-4 py-1.5 rounded-full font-black text-[10px] uppercase tracking-widest flex items-center gap-2 shadow-2xl animate-in fade-in slide-in-from-top-4 z-50">
@@ -340,9 +340,9 @@ export default function SocialNetworkMapPage() {
              </div>
           )}
 
-          <div className="absolute bottom-4 right-4 p-3 rounded-full bg-background/80 border border-primary/20 backdrop-blur z-40">
-             <MapIcon className="h-5 w-5 text-primary opacity-40" />
-          </div>
+          {/* Abstract Grid Elements */}
+          <div className="absolute top-0 right-0 h-full w-[1px] bg-primary/10" />
+          <div className="absolute bottom-0 left-0 w-full h-[1px] bg-primary/10" />
         </div>
       </div>
 
