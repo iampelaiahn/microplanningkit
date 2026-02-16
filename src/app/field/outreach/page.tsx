@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState, useMemo } from 'react'
@@ -56,16 +57,18 @@ export default function OutreachTrackingPage() {
     mc: 0,
     fc: 0,
     lube: 0,
-    hivst: 0,
-    hivstResult: "Pending",
-    pregTest: 0,
-    pregResult: "Pending",
+    hivstDistributed: 0,
+    hivstNegative: 0,
+    hivstPositive: 0,
+    pregDistributed: 0,
+    pregNegative: 0,
+    pregPositive: 0,
     padsReusable: 0,
     padsDisposable: 0
   });
 
   const totalCommodities = useMemo(() => 
-    services.mc + services.fc + services.lube + services.hivst + services.pregTest + services.padsReusable + services.padsDisposable,
+    services.mc + services.fc + services.lube + services.hivstDistributed + services.pregDistributed + services.padsReusable + services.padsDisposable,
   [services]);
 
   const isHighRiskAlert = useMemo(() => risk === 'High' && (services.mc + services.fc + services.lube === 0), [risk, services]);
@@ -201,7 +204,7 @@ export default function OutreachTrackingPage() {
                 </div>
               </div>
 
-              {/* Diagnostic Services - Separated HIVST and Pregnancy Tests */}
+              {/* Diagnostic Services */}
               <div className="space-y-4">
                 {/* HIVST Service Block */}
                 <div className="p-4 bg-primary/5 rounded-lg border border-primary/10 space-y-4">
@@ -209,24 +212,18 @@ export default function OutreachTrackingPage() {
                     <Stethoscope className="h-4 w-4" />
                     <span className="text-[10px] font-black uppercase tracking-widest">HIVST Service</span>
                   </div>
-                  <div className="flex gap-4">
-                    <div className="w-24 space-y-1">
-                      <Label className="text-[8px] font-bold uppercase">Units</Label>
-                      <Input type="number" min="0" value={services.hivst} onChange={(e) => setServices({...services, hivst: parseInt(e.target.value) || 0})} className="h-8 bg-background" />
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="space-y-1">
+                      <Label className="text-[8px] font-bold uppercase">Distributed</Label>
+                      <Input type="number" min="0" value={services.hivstDistributed} onChange={(e) => setServices({...services, hivstDistributed: parseInt(e.target.value) || 0})} className="h-8 bg-background" />
                     </div>
-                    <div className="flex-1 space-y-1">
-                      <Label className="text-[8px] font-bold uppercase">Result</Label>
-                      <Select value={services.hivstResult} onValueChange={(v) => setServices({...services, hivstResult: v})}>
-                        <SelectTrigger className="h-8 bg-background">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Pending">Pending</SelectItem>
-                          <SelectItem value="Non-Reactive">Non-Reactive</SelectItem>
-                          <SelectItem value="Reactive">Reactive (Urgent Linkage)</SelectItem>
-                          <SelectItem value="Inconclusive">Inconclusive</SelectItem>
-                        </SelectContent>
-                      </Select>
+                    <div className="space-y-1">
+                      <Label className="text-[8px] font-bold uppercase text-green-600">Negative</Label>
+                      <Input type="number" min="0" value={services.hivstNegative} onChange={(e) => setServices({...services, hivstNegative: parseInt(e.target.value) || 0})} className="h-8 bg-background" />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-[8px] font-bold uppercase text-destructive">Positive</Label>
+                      <Input type="number" min="0" value={services.hivstPositive} onChange={(e) => setServices({...services, hivstPositive: parseInt(e.target.value) || 0})} className="h-8 bg-background" />
                     </div>
                   </div>
                 </div>
@@ -237,23 +234,18 @@ export default function OutreachTrackingPage() {
                     <Activity className="h-4 w-4" />
                     <span className="text-[10px] font-black uppercase tracking-widest">Pregnancy Test Service</span>
                   </div>
-                  <div className="flex gap-4">
-                    <div className="w-24 space-y-1">
-                      <Label className="text-[8px] font-bold uppercase">Units</Label>
-                      <Input type="number" min="0" value={services.pregTest} onChange={(e) => setServices({...services, pregTest: parseInt(e.target.value) || 0})} className="h-8 bg-background" />
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="space-y-1">
+                      <Label className="text-[8px] font-bold uppercase">Distributed</Label>
+                      <Input type="number" min="0" value={services.pregDistributed} onChange={(e) => setServices({...services, pregDistributed: parseInt(e.target.value) || 0})} className="h-8 bg-background" />
                     </div>
-                    <div className="flex-1 space-y-1">
-                      <Label className="text-[8px] font-bold uppercase">Result</Label>
-                      <Select value={services.pregResult} onValueChange={(v) => setServices({...services, pregResult: v})}>
-                        <SelectTrigger className="h-8 bg-background">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Pending">Pending</SelectItem>
-                          <SelectItem value="Negative">Negative</SelectItem>
-                          <SelectItem value="Positive">Positive (ANC Linkage)</SelectItem>
-                        </SelectContent>
-                      </Select>
+                    <div className="space-y-1">
+                      <Label className="text-[8px] font-bold uppercase text-green-600">Negative</Label>
+                      <Input type="number" min="0" value={services.pregNegative} onChange={(e) => setServices({...services, pregNegative: parseInt(e.target.value) || 0})} className="h-8 bg-background" />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-[8px] font-bold uppercase text-destructive">Positive</Label>
+                      <Input type="number" min="0" value={services.pregPositive} onChange={(e) => setServices({...services, pregPositive: parseInt(e.target.value) || 0})} className="h-8 bg-background" />
                     </div>
                   </div>
                 </div>
@@ -318,9 +310,9 @@ export default function OutreachTrackingPage() {
                   <ShieldAlert className="h-3 w-3 shrink-0" /> CRITICAL: No commodities distributed to high-risk node
                 </div>
               )}
-              {services.hivstResult === 'Reactive' && (
+              {services.hivstPositive > 0 && (
                 <div className="p-3 bg-destructive/20 border border-destructive/30 rounded text-[9px] font-black uppercase text-destructive flex gap-2">
-                  <ShieldAlert className="h-3 w-3 shrink-0" /> URGENT: Reactive HIVST result. Initiate referral.
+                  <ShieldAlert className="h-3 w-3 shrink-0" /> URGENT: Reactive HIVST result detected. Initiate referral.
                 </div>
               )}
             </CardContent>

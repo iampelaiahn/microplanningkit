@@ -18,10 +18,12 @@
             "mc": { "type": "number" },
             "fc": { "type": "number" },
             "lube": { "type": "number" },
-            "hivst": { "type": "number" },
-            "hivstResult": { "type": "string" },
-            "pregTest": { "type": "number" },
-            "pregResult": { "type": "string" },
+            "hivstDistributed": { "type": "number" },
+            "hivstNegative": { "type": "number" },
+            "hivstPositive": { "type": "number" },
+            "pregDistributed": { "type": "number" },
+            "pregNegative": { "type": "number" },
+            "pregPositive": { "type": "number" },
             "padsReusable": { "type": "number" },
             "padsDisposable": { "type": "number" }
           }
