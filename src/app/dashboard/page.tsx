@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useState } from 'react'
@@ -69,7 +68,6 @@ export default function Dashboard() {
                   <div>
                     <p className="text-[10px] font-black uppercase text-muted-foreground tracking-tighter">{item.facility}</p>
                     <h3 className="text-lg font-bold truncate max-w-[120px]">{item.name}</h3>
-                    <Badge variant="outline" className="text-[9px] mt-1">{item.ward}</Badge>
                   </div>
                   <div className="text-right">
                     <p className="text-3xl font-black text-primary">{item.currentStock.toLocaleString()}</p>

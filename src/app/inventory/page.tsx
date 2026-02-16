@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useState } from 'react'
@@ -86,7 +85,6 @@ export default function InventoryPage() {
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-lg font-bold">{item.name}</CardTitle>
-                  <Badge variant="outline" className="text-[10px] uppercase font-bold">{item.ward}</Badge>
                 </div>
                 <CardDescription className="text-[10px] font-medium text-muted-foreground">{item.facility}</CardDescription>
               </CardHeader>
@@ -127,7 +125,6 @@ export default function InventoryPage() {
               <TableRow>
                 <TableHead>Service Item</TableHead>
                 <TableHead>Facility Node</TableHead>
-                <TableHead>Target Ward</TableHead>
                 <TableHead className="text-right">Received (Whse)</TableHead>
                 <TableHead className="text-right">Dispensed (Peers)</TableHead>
                 <TableHead className="text-right">In Hand</TableHead>
@@ -139,7 +136,6 @@ export default function InventoryPage() {
                 <TableRow key={item.id}>
                   <TableCell className="font-bold">{item.name}</TableCell>
                   <TableCell className="text-xs">{item.facility}</TableCell>
-                  <TableCell>{item.ward}</TableCell>
                   <TableCell className="text-right font-mono">{item.totalReceived.toLocaleString()}</TableCell>
                   <TableCell className="text-right font-mono">{item.totalDispensed.toLocaleString()}</TableCell>
                   <TableCell className="text-right font-mono font-bold text-primary">{item.currentStock.toLocaleString()}</TableCell>
