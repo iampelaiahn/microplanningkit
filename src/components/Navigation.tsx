@@ -19,7 +19,7 @@ export function Navigation() {
   const pathname = usePathname();
 
   const navItems = [
-    { name: 'Map', href: '/hotspots', icon: Map },
+    { name: 'Social Map', href: '/hotspots', icon: Map },
     { name: 'Diary', href: '/field/diary', icon: BookOpen },
     { name: 'Assess', href: '/assessment', icon: ClipboardCheck },
     { name: 'Profile', href: '/field/profiling', icon: Target },
