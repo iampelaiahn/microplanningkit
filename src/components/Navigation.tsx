@@ -11,21 +11,51 @@ import {
   Home,
   Activity,
   ShieldCheck,
-  LogOut
+  LogOut,
+  Network,
+  BookOpen,
+  Target,
+  RefreshCw,
+  Users,
+  UserCog
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { useState, useEffect } from 'react'
 
 export function Navigation() {
   const pathname = usePathname();
+  const [role, setRole] = useState<'PE' | 'CHM'>('CHM');
 
-  const navItems = [
+  // Logic to determine role based on active path
+  useEffect(() => {
+    const pePaths = ['/field/diary', '/field/assess', '/field/profiling', '/sync', '/hotspots'];
+    const isPEPath = pePaths.some(path => pathname.startsWith(path)) && !pathname.startsWith('/hotspots/supervisor');
+    
+    if (isPEPath) {
+      setRole('PE');
+    } else if (pathname.startsWith('/dashboard') || pathname.startsWith('/inventory') || pathname.startsWith('/assessment')) {
+      setRole('CHM');
+    }
+  }, [pathname]);
+
+  const chmItems = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Field tracker', href: '/field', icon: Activity },
-    { name: 'Hotspots', href: '/hotspots', icon: Map },
+    { name: 'Hotspots', href: '/hotspots/supervisor', icon: Map },
     { name: 'Assessment repo', href: '/assessment', icon: ShieldCheck },
     { name: 'Inventory', href: '/inventory', icon: Package },
   ];
+
+  const peItems = [
+    { name: 'Social Map', href: '/hotspots', icon: Network },
+    { name: 'Diary', href: '/field/diary', icon: BookOpen },
+    { name: 'Assess', href: '/field/assess', icon: Shield },
+    { name: 'Profile', href: '/field/profiling', icon: Target },
+    { name: 'Sync', href: '/sync', icon: RefreshCw },
+  ];
+
+  const currentItems = role === 'CHM' ? chmItems : peItems;
 
   return (
     <nav className={cn(
@@ -40,11 +70,18 @@ export function Navigation() {
           <div className="bg-primary/20 p-2 rounded-full border border-primary/40">
             <Shield className="h-6 w-6 text-primary" />
           </div>
-          <span className="text-xl font-bold tracking-tight text-foreground glow-cyan">Sentinel</span>
+          <span className="text-xl font-bold tracking-tight text-foreground glow-cyan uppercase">Sentinel</span>
         </Link>
-        <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest pl-11">
-          Surveillance Hub
-        </p>
+        <div className="flex items-center gap-2 pl-11 mt-1">
+          {role === 'CHM' ? (
+            <UserCog className="h-3 w-3 text-accent" />
+          ) : (
+            <Users className="h-3 w-3 text-primary" />
+          )}
+          <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">
+            {role === 'CHM' ? 'Supervisor Mode' : 'Peer Field Kit'}
+          </p>
+        </div>
       </div>
 
       {/* Home link for mobile */}
@@ -54,8 +91,8 @@ export function Navigation() {
 
       {/* Nav Items */}
       <div className="flex flex-row md:flex-col items-center md:items-stretch gap-1 md:gap-2 w-full">
-        {navItems.map((item) => {
-          const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
+        {currentItems.map((item) => {
+          const isActive = pathname === item.href;
           return (
             <Link
               key={item.href}
@@ -68,7 +105,7 @@ export function Navigation() {
               )}
             >
               <item.icon className={cn("h-5 w-5", isActive ? "text-primary scale-110" : "text-muted-foreground group-hover:text-foreground")} />
-              <span className="text-[10px] md:text-sm font-bold md:font-medium tracking-tight">
+              <span className="text-[10px] md:text-sm font-bold md:font-medium tracking-tight whitespace-nowrap">
                 {item.name}
               </span>
             </Link>
@@ -80,10 +117,10 @@ export function Navigation() {
       <div className="hidden md:flex mt-auto p-4 border-t border-border/50 items-center justify-between w-full">
         <div className="flex items-center gap-3">
           <Avatar className="h-8 w-8 border-2 border-muted">
-            <AvatarFallback className="bg-muted text-foreground text-xs">A</AvatarFallback>
+            <AvatarFallback className="bg-muted text-foreground text-xs">{role[0]}</AvatarFallback>
           </Avatar>
           <div className="overflow-hidden">
-            <p className="text-xs font-bold truncate">Anonymous User</p>
+            <p className="text-xs font-bold truncate">Anonymous {role}</p>
           </div>
         </div>
         <button className="text-muted-foreground hover:text-foreground transition-colors ml-2">
