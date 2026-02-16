@@ -230,6 +230,61 @@ export default function SocialNetworkMapPage() {
             </DialogContent>
           </Dialog>
 
+          {/* Add Line Dialog */}
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button className="bg-accent/20 border border-accent/40 hover:bg-accent/30 text-accent gap-2 h-10">
+                <LinkIcon className="h-4 w-4" /> Add Link
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="cyber-border bg-background border-primary/20">
+              <DialogHeader>
+                <DialogTitle className="text-primary glow-cyan">Establish Trust Link</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label>Source Node</Label>
+                  <Select value={newLinkFrom} onValueChange={setNewLinkFrom}>
+                    <SelectTrigger className="bg-muted/20 border-primary/10">
+                      <SelectValue placeholder="Select starting point" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {nodes.map(n => <SelectItem key={n.id} value={n.id}>{n.label}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Target Node</Label>
+                  <Select value={newLinkTo} onValueChange={setNewLinkTo}>
+                    <SelectTrigger className="bg-muted/20 border-primary/10">
+                      <SelectValue placeholder="Select end point" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {nodes.map(n => <SelectItem key={n.id} value={n.id}>{n.label}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Relationship Strength</Label>
+                  <Select value={newLinkStrength} onValueChange={(v: RelationshipStrength) => setNewLinkStrength(v)}>
+                    <SelectTrigger className="bg-muted/20 border-primary/10">
+                      <SelectValue placeholder="Select strength" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="weak">Weak / Initial</SelectItem>
+                      <SelectItem value="moderate">Moderate / Stable</SelectItem>
+                      <SelectItem value="strong">Strong / Mobilizer</SelectItem>
+                      <SelectItem value="critical">Critical / High Trust</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button onClick={addLink} className="bg-accent text-background font-bold w-full">Connect Nodes</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
           <div className="flex items-center gap-6 text-xs font-bold uppercase tracking-widest ml-4">
             <div className="flex items-center gap-2 group cursor-pointer hover:text-primary transition-colors">
               <Mail className="h-4 w-4 text-accent" />
@@ -267,7 +322,7 @@ export default function SocialNetworkMapPage() {
           </h2>
           
           <div className="space-y-4 pt-4 border-t border-primary/10">
-            <h3 className="text-[10px] font-black uppercase text-muted-foreground tracking-tighter">Establish Trust Link</h3>
+            <h3 className="text-[10px] font-black uppercase text-muted-foreground tracking-tighter">Quick Establish</h3>
             <div className="space-y-3">
               <div className="space-y-1">
                 <Label className="text-[9px] uppercase font-bold text-muted-foreground">Source</Label>
