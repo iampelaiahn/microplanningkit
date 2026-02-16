@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState, useMemo } from 'react'
@@ -30,7 +31,10 @@ import {
   Building2,
   Users,
   MapPin,
-  X
+  X,
+  Zap,
+  Link as LinkIcon,
+  Compass
 } from 'lucide-react'
 import { generateRiskAssessmentSummary } from '@/ai/flows/generate-risk-assessment-summary'
 import { toast } from '@/hooks/use-toast'
@@ -42,6 +46,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useCollection, useFirestore } from '@/firebase'
 import { Progress } from '@/components/ui/progress'
+import { INITIAL_HOTSPOTS } from '@/lib/store'
 
 const RISK_FACTORS = [
   "Inconsistent condom use",
@@ -97,14 +102,16 @@ export default function AssessmentManagementPage() {
   const { data: visits } = useCollection('outreachVisits');
   const { data: hotspotProfiles } = useCollection('hotspotProfiles');
 
+  // Tool Selection Flags
+  const isHotspotTool = selectedToolId === 'hotspot-profiling';
+  const isNetworkTool = selectedToolId === 'network-map';
+
   // Risk Assessment Engine State
   const [uin, setUin] = useState("");
   const [selectedFactors, setSelectedFactors] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [riskResult, setRiskResult] = useState<{ summary: string; rationale: string } | null>(null);
   const [assignedLevel, setAssignedLevel] = useState<'Low' | 'Medium' | 'High'>('Medium');
-
-  const isHotspotTool = selectedToolId === 'hotspot-profiling';
 
   // Stats Calculation
   const stats = useMemo(() => {
@@ -133,12 +140,35 @@ export default function AssessmentManagementPage() {
         });
       });
 
-      // Filtered records for the table
       const filteredRecords = activeFactorFilter 
         ? filteredByWard.filter(h => h.typology?.includes(activeFactorFilter))
         : filteredByWard;
 
       return { total: filteredByWard.length, highVolume, criticalGaps, typeCounts, totalPop, filteredRecords };
+    } else if (isNetworkTool) {
+      // Logic for Network Analysis
+      const hotspots = INITIAL_HOTSPOTS;
+      const filteredByWard = selectedWard === "All" ? hotspots : hotspots.filter(h => h.ward === selectedWard);
+      
+      const expectedCaseload = 15;
+      const coverageRate = (filteredByWard.length / expectedCaseload) * 100;
+      const isolatedCount = filteredByWard.filter(h => h.relationshipStrength === 'Weak').length;
+      
+      const avgInfluence = filteredByWard.length > 0 
+        ? Math.round(filteredByWard.reduce((acc, h) => acc + (h.influenceScore || 0), 0) / filteredByWard.length)
+        : 0;
+
+      const filteredRecords = activeFactorFilter
+        ? filteredByWard.filter(h => h.type === activeFactorFilter)
+        : filteredByWard;
+
+      return { 
+        total: filteredByWard.length, 
+        coverageRate, 
+        isolatedCount, 
+        avgInfluence, 
+        filteredRecords 
+      };
     } else {
       const records = visits || [];
       let filteredByWard = records;
@@ -159,14 +189,13 @@ export default function AssessmentManagementPage() {
         });
       });
 
-      // Filtered records for the table
       const filteredRecords = activeFactorFilter
         ? filteredByWard.filter(a => a.topicsDiscussed?.includes(activeFactorFilter))
         : filteredByWard;
 
       return { total, levels, factorCounts, filteredRecords };
     }
-  }, [isHotspotTool, selectedWard, activeFactorFilter, hotspotProfiles, visits]);
+  }, [isHotspotTool, isNetworkTool, selectedWard, activeFactorFilter, hotspotProfiles, visits]);
 
   const handleAssessment = async () => {
     if (!uin) {
@@ -179,6 +208,7 @@ export default function AssessmentManagementPage() {
         identifiedRiskFactors: selectedFactors,
         assignedRiskLevel: assignedLevel
       });
+      riskResult; // Not doing much here for now
       setRiskResult(output);
       toast({ title: "Intelligence Analysis Generated" });
     } catch (error) {
@@ -264,10 +294,10 @@ export default function AssessmentManagementPage() {
           <div>
             <div className="flex items-center gap-3">
               <h1 className="text-4xl font-black text-primary glow-cyan tracking-tighter uppercase italic">
-                {isHotspotTool ? 'Hotspot Profiler Analysis' : 'Risk Intelligence Analysis'}
+                {isHotspotTool ? 'Hotspot Profiler Analysis' : isNetworkTool ? 'Social Network Analysis' : 'Risk Intelligence Analysis'}
               </h1>
             </div>
-            <p className="text-muted-foreground mt-1">Real-time KPI tracking from peer educator records</p>
+            <p className="text-muted-foreground mt-1">Real-time surveillance monitoring from field data</p>
           </div>
         </div>
         
@@ -289,10 +319,12 @@ export default function AssessmentManagementPage() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card className="bg-primary/5 border-primary/20 px-6 py-4 flex items-center gap-4">
            <div className="p-3 bg-primary/20 rounded-lg">
-              {isHotspotTool ? <Target className="h-6 w-6 text-primary" /> : <Shield className="h-6 w-6 text-primary" />}
+              {isHotspotTool ? <Target className="h-6 w-6 text-primary" /> : isNetworkTool ? <Network className="h-6 w-6 text-primary" /> : <Shield className="h-6 w-6 text-primary" />}
            </div>
            <div className="flex-1">
-              <p className="text-[10px] font-black uppercase text-muted-foreground">{isHotspotTool ? 'Sites Mapped' : 'Assessments'}</p>
+              <p className="text-[10px] font-black uppercase text-muted-foreground">
+                {isHotspotTool ? 'Sites Mapped' : isNetworkTool ? 'Geographic Nodes' : 'Assessments'}
+              </p>
               <p className="text-3xl font-black text-foreground">{stats.total}</p>
            </div>
         </Card>
@@ -301,15 +333,40 @@ export default function AssessmentManagementPage() {
           <>
             <Card className="bg-accent/5 border-l-4 border-l-accent px-6 py-4">
               <p className="text-[10px] font-black uppercase text-muted-foreground">High Volume Hubs</p>
-              <p className="text-2xl font-black text-accent">{stats.highVolume}</p>
+              <p className="text-2xl font-black text-accent">{(stats as any).highVolume}</p>
             </Card>
             <Card className="bg-orange-500/5 border-l-4 border-l-orange-500 px-6 py-4">
               <p className="text-[10px] font-black uppercase text-muted-foreground">Critical Gaps</p>
-              <p className="text-2xl font-black text-orange-500">{stats.criticalGaps}</p>
+              <p className="text-2xl font-black text-orange-500">{(stats as any).criticalGaps}</p>
             </Card>
             <Card className="bg-muted/5 border-l-4 border-l-muted-foreground px-6 py-4">
               <p className="text-[10px] font-black uppercase text-muted-foreground">Pop. Estimate</p>
               <p className="text-2xl font-black text-foreground">~{(stats as any).totalPop}</p>
+            </Card>
+          </>
+        ) : isNetworkTool ? (
+          <>
+            <Card className={cn(
+              "border-l-4 px-6 py-4",
+              (stats as any).coverageRate < 70 ? "bg-accent/5 border-l-accent" : "bg-primary/5 border-l-primary"
+            )}>
+              <p className="text-[10px] font-black uppercase text-muted-foreground">Network Coverage</p>
+              <p className={cn("text-2xl font-black", (stats as any).coverageRate < 70 ? "text-accent" : "text-primary")}>
+                {Math.round((stats as any).coverageRate)}%
+              </p>
+            </Card>
+            <Card className={cn(
+              "border-l-4 px-6 py-4",
+              (stats as any).isolatedCount > 0 ? "bg-orange-500/5 border-l-orange-500" : "bg-primary/5 border-l-primary"
+            )}>
+              <p className="text-[10px] font-black uppercase text-muted-foreground">Isolated Nodes</p>
+              <p className={cn("text-2xl font-black", (stats as any).isolatedCount > 0 ? "text-orange-500" : "text-primary")}>
+                {(stats as any).isolatedCount}
+              </p>
+            </Card>
+            <Card className="bg-muted/5 border-l-4 border-l-muted-foreground px-6 py-4">
+              <p className="text-[10px] font-black uppercase text-muted-foreground">Avg influence</p>
+              <p className="text-2xl font-black text-foreground">{(stats as any).avgInfluence}</p>
             </Card>
           </>
         ) : (
@@ -337,10 +394,10 @@ export default function AssessmentManagementPage() {
       <Tabs defaultValue="repository" onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-2 mb-8 h-12 bg-muted/30 border border-primary/10">
           <TabsTrigger value="repository" className="text-base font-bold data-[state=active]:bg-primary data-[state=active]:text-background">
-            <ClipboardList className="h-4 w-4 mr-2" /> Data Repository
+            <ClipboardList className="h-4 w-4 mr-2" /> {isNetworkTool ? 'Node Repository' : 'Data Repository'}
           </TabsTrigger>
           <TabsTrigger value="engine" className="text-base font-bold data-[state=active]:bg-primary data-[state=active]:text-background">
-            <BrainCircuit className="h-4 w-4 mr-2" /> {isHotspotTool ? 'Microplanning Engine' : 'Risk Assessment Engine'}
+            <BrainCircuit className="h-4 w-4 mr-2" /> {isHotspotTool ? 'Microplanning Engine' : isNetworkTool ? 'Network Integrity Engine' : 'Risk Assessment Engine'}
           </TabsTrigger>
         </TabsList>
 
@@ -350,7 +407,8 @@ export default function AssessmentManagementPage() {
                 <div>
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-xs font-black uppercase text-primary tracking-widest flex items-center gap-2">
-                      <BarChart3 className="h-4 w-4" /> {isHotspotTool ? 'Typology Prevalence' : 'Risk Factors Prevalence'}
+                      <BarChart3 className="h-4 w-4" /> 
+                      {isHotspotTool ? 'Typology Prevalence' : isNetworkTool ? 'Node Distribution' : 'Risk Factors Prevalence'}
                     </h3>
                     {activeFactorFilter && (
                       <Button 
@@ -364,9 +422,19 @@ export default function AssessmentManagementPage() {
                     )}
                   </div>
                   <div className="space-y-3">
-                    {(isHotspotTool ? TYPOLOGIES : RISK_FACTORS).map((factor) => {
-                      const count = (stats as any)[isHotspotTool ? 'typeCounts' : 'factorCounts'][factor] || 0;
-                      const percentage = stats.total > 0 ? Math.round((count / stats.total) * 100) : 0;
+                    {(isHotspotTool ? TYPOLOGIES : isNetworkTool ? ['Facility', 'Community', 'Peer'] : RISK_FACTORS).map((factor) => {
+                      let percentage = 0;
+                      if (isHotspotTool) {
+                        const count = (stats as any).typeCounts[factor] || 0;
+                        percentage = stats.total > 0 ? Math.round((count / stats.total) * 100) : 0;
+                      } else if (isNetworkTool) {
+                        const count = (stats.filteredRecords as any[]).filter(r => r.type === factor).length;
+                        percentage = stats.total > 0 ? Math.round((count / stats.total) * 100) : 0;
+                      } else {
+                        const count = (stats as any).factorCounts[factor] || 0;
+                        percentage = stats.total > 0 ? Math.round((count / stats.total) * 100) : 0;
+                      }
+                      
                       const isActive = activeFactorFilter === factor;
                       
                       return (
@@ -396,19 +464,19 @@ export default function AssessmentManagementPage() {
                   </div>
                 </div>
 
-                {isHotspotTool && (
+                {isNetworkTool && (
                   <div className="pt-6 border-t border-primary/10 space-y-4">
                     <h3 className="text-xs font-black uppercase text-accent tracking-widest flex items-center gap-2">
-                      <AlertTriangle className="h-4 w-4" /> Structural Risks
+                      <Zap className="h-4 w-4" /> Viability Metrics
                     </h3>
                     <div className="space-y-2">
                        <div className="flex justify-between text-[9px] font-bold uppercase">
-                          <span className="text-muted-foreground">Police Harassment</span>
-                          <span className="text-accent">High</span>
+                          <span className="text-muted-foreground">Network Bridges</span>
+                          <span className="text-primary">18 Active</span>
                        </div>
                        <div className="flex justify-between text-[9px] font-bold uppercase">
-                          <span className="text-muted-foreground">Violence Exposure</span>
-                          <span className="text-accent">Moderate</span>
+                          <span className="text-muted-foreground">Hub Reach</span>
+                          <span className="text-primary">High</span>
                        </div>
                     </div>
                   </div>
@@ -418,7 +486,9 @@ export default function AssessmentManagementPage() {
              <Card className="md:col-span-3 cyber-border border-primary/10 bg-background/40">
                 <CardHeader className="flex flex-row items-center justify-between">
                    <div>
-                     <CardTitle className="text-xl font-bold italic">{isHotspotTool ? 'Hotspot Profile Ledger' : 'Client Risk Ledger'}</CardTitle>
+                     <CardTitle className="text-xl font-bold italic">
+                       {isHotspotTool ? 'Hotspot Profile Ledger' : isNetworkTool ? 'Geo-Social Node Ledger' : 'Client Risk Ledger'}
+                     </CardTitle>
                      <CardDescription>
                         Records for {selectedWard} 
                         {activeFactorFilter && ` • ${activeFactorFilter}`}
@@ -434,27 +504,36 @@ export default function AssessmentManagementPage() {
                   <Table>
                     <TableHeader className="bg-muted/30">
                       <TableRow>
-                        <TableHead className="pl-6 text-[10px] font-black uppercase">{isHotspotTool ? 'Site Name' : 'Unique ID'}</TableHead>
+                        <TableHead className="pl-6 text-[10px] font-black uppercase">{isHotspotTool || isNetworkTool ? 'Site Name' : 'Unique ID'}</TableHead>
                         <TableHead className="text-[10px] font-black uppercase">Ward</TableHead>
-                        <TableHead className="text-[10px] font-black uppercase">{isHotspotTool ? 'Typology' : 'Baseline Level'}</TableHead>
-                        <TableHead className="text-[10px] font-black uppercase">{isHotspotTool ? 'Pop. Est' : 'Timestamp'}</TableHead>
+                        <TableHead className="text-[10px] font-black uppercase">{isHotspotTool || isNetworkTool ? 'Typology' : 'Baseline Level'}</TableHead>
+                        <TableHead className="text-[10px] font-black uppercase">{isHotspotTool ? 'Pop. Est' : isNetworkTool ? 'Influence' : 'Timestamp'}</TableHead>
                         <TableHead className="text-right pr-6 text-[10px] font-black uppercase">Priority</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {stats.filteredRecords.map((record: any) => {
-                        if (isHotspotTool) {
-                          const pData = record.populationData || {};
-                          const total = Object.values(pData).reduce((acc: number, cur: any) => acc + (cur.total || 0), 0);
+                        if (isHotspotTool || isNetworkTool) {
+                          const val = isHotspotTool 
+                            ? (Object.values(record.populationData || {}).reduce((acc: number, cur: any) => acc + (cur.total || 0), 0))
+                            : (record.influenceScore || 0);
+                          
                           return (
                             <TableRow key={record.id} className="hover:bg-primary/5 border-primary/5 transition-colors">
-                              <TableCell className="pl-6 font-bold">{record.hotspotName}</TableCell>
+                              <TableCell className="pl-6 font-bold">{record.hotspotName || record.name}</TableCell>
                               <TableCell className="text-xs">{record.ward}</TableCell>
-                              <TableCell><Badge variant="outline" className="text-[10px] uppercase">{record.typology?.[0] || 'Unknown'}</Badge></TableCell>
-                              <TableCell className="text-xs font-black text-primary">{total}</TableCell>
+                              <TableCell>
+                                <Badge variant="outline" className="text-[10px] uppercase">
+                                  {isHotspotTool ? (record.typology?.[0] || 'Unknown') : (record.type || 'Unknown')}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="text-xs font-black text-primary">{val}</TableCell>
                               <TableCell className="text-right pr-6">
-                                <Badge className={cn("text-[10px] font-black uppercase", record.priorityLevel === 'Critical' ? "bg-accent" : "bg-muted")}>
-                                  {record.priorityLevel || 'Standard'}
+                                <Badge className={cn(
+                                  "text-[10px] font-black uppercase", 
+                                  (record.priorityLevel === 'Critical' || record.relationshipStrength === 'Weak') ? "bg-accent" : "bg-muted"
+                                )}>
+                                  {isNetworkTool ? (record.relationshipStrength === 'Weak' ? 'ISOLATED' : 'ACTIVE') : (record.priorityLevel || 'Standard')}
                                 </Badge>
                               </TableCell>
                             </TableRow>
@@ -498,17 +577,45 @@ export default function AssessmentManagementPage() {
 
         <TabsContent value="engine">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {isHotspotTool ? (
+            {isHotspotTool || isNetworkTool ? (
               <Card className="cyber-border border-primary/10 bg-background/40">
                 <CardHeader>
-                  <CardTitle className="text-2xl italic font-black">Strategic Simulation</CardTitle>
-                  <CardDescription>Analyze hotspots for microplanning interventions</CardDescription>
+                  <CardTitle className="text-2xl italic font-black">
+                    {isNetworkTool ? 'Network Integrity Simulation' : 'Strategic Microplanning'}
+                  </CardTitle>
+                  <CardDescription>
+                    {isNetworkTool ? 'Analyze trust bridges and identify coverage gaps' : 'Analyze hotspots for microplanning interventions'}
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  <div className="p-12 text-center space-y-4 opacity-40">
-                    <Target className="h-16 w-16 mx-auto text-muted-foreground" />
-                    <p className="font-bold uppercase tracking-widest">Select a record from the repository to run AI strategic analysis.</p>
-                  </div>
+                  {isNetworkTool ? (
+                    <div className="space-y-6">
+                      <div className="p-4 bg-accent/5 border border-accent/20 rounded-lg flex gap-3">
+                         <AlertTriangle className="h-6 w-6 text-accent shrink-0" />
+                         <div>
+                            <p className="text-sm font-bold text-accent uppercase tracking-tighter">Insufficient Network Viability</p>
+                            <p className="text-xs text-accent/80">Network coverage in {selectedWard} is below the 70% threshold. Strategic trust bridges are required for Ward HQ stabilization.</p>
+                         </div>
+                      </div>
+                      
+                      <div className="space-y-4">
+                        <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Recommended Strategic Links</p>
+                        <div className="p-3 bg-primary/5 border border-primary/10 rounded-md flex items-center justify-between">
+                           <div className="flex items-center gap-2 text-xs font-bold">
+                             <MapPin className="h-4 w-4 text-primary" /> Mbare Musika
+                             <LinkIcon className="h-3 w-3 text-muted-foreground" />
+                             <Users className="h-4 w-4 text-accent" /> Clara (Peer Leader)
+                           </div>
+                           <Badge className="bg-primary text-background text-[8px] font-black">HIGH IMPACT</Badge>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="p-12 text-center space-y-4 opacity-40">
+                      <Target className="h-16 w-16 mx-auto text-muted-foreground" />
+                      <p className="font-bold uppercase tracking-widest">Select a record from the repository to run AI strategic analysis.</p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             ) : (
